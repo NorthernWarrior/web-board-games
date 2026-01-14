@@ -1,0 +1,74 @@
+<div>
+  <h1>Monopoly Banker Lobby</h1>
+</div>
+<hr />
+<div>
+  <form [formGroup]="formJoin">
+    <fieldset>
+      <legend>Join a Game</legend>
+      <div class="row">
+        <div class="col">
+          <mat-form-field>
+            <mat-label>Game ID</mat-label>
+            <input matInput formControlName="gameID" />
+            @if(formJoin.controls['gameID'].hasError('required')){<mat-error>Is required</mat-error>}
+            @if(formJoin.controls['gameID'].hasError('notExists')){<mat-error>Game ID does not exist</mat-error>}
+          </mat-form-field>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <mat-form-field>
+            <mat-label>Player Name</mat-label>
+            <input matInput formControlName="playerName" />
+            @if(formJoin.controls['playerName'].hasError('required')){<mat-error>Is required</mat-error>}
+          </mat-form-field>
+        </div>
+        <div class="col">
+          <button mat-raised-button [disabled]="formJoin.invalid" (click)="onGameJoin()">Join</button>
+        </div>
+      </div>
+    </fieldset>
+  </form>
+</div>
+<br />
+<div>
+  <form [formGroup]="formCreate">
+    <fieldset>
+      <legend>Create a new Game</legend>
+      <div class="row">
+        <div class="col">
+          <mat-form-field>
+            <mat-label>Game Label</mat-label>
+            <input matInput formControlName="label" />
+          </mat-form-field>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <mat-form-field>
+            <mat-label>Player Name</mat-label>
+            <input matInput formControlName="playerName" />
+            @if(formCreate.controls['playerName'].hasError('required')){<mat-error>Is required</mat-error>}
+          </mat-form-field>
+        </div>
+        <div class="col">
+          <button mat-raised-button [disabled]="formCreate.invalid" (click)="onGameCreate()">Create</button>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+            <span>Additional Options</span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <mat-slide-toggle formControlName="moneyOnFreeParking">Money on Free Parking</mat-slide-toggle>
+        </div>
+        <div class="col">
+          <mat-slide-toggle formControlName="doubleMoneyOnGo">Double Money on Go</mat-slide-toggle>
+        </div>
+      </div>
+    </fieldset>
+  </form>
+</div>

@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Domain/">
+    <Project Path="WebBoardGames.Application/WebBoardGames.Application.csproj" />
+    <Project Path="WebBoardGames.Monopoly/WebBoardGames.Monopoly.csproj" />
+  </Folder>
+  <Folder Name="/src/Presentation/">
+    <Project Path="WebBoardGames.API/WebBoardGames.API.csproj" />
+  </Folder>
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
+</Solution>

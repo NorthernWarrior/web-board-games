@@ -1,0 +1,7 @@
+services:
+  board-games-api:
+    image: ${DOCKER_REGISTRY-}web-board-games-api
+    build:
+      context: .
+      dockerfile: WebBoardGames.API/Dockerfile
+    
