@@ -41,14 +41,17 @@ export class MonopolyBankerLobbyComponent {
     }
     const gameID = this.formJoin.value.gameID;
     console.log(`Joining game with ID: ${gameID}`);
-    this._api.gameExists(this.formJoin.value).subscribe({
+    this._api.gameJoin(this.formJoin.value).subscribe({
       next: (result) => {
         if (result.exists && result.playerID) {
           console.log(`Game with ID: ${gameID} exists.`);
           this.onNavigateToGame(gameID, result.playerID);
-        } else {
+        } else if (!result.exists) {
           console.log(`Game with ID: ${gameID} does not exist.`);
           this.formJoin.controls['gameID'].setErrors({ notExists: true });
+        } else {
+          console.log(`Game with ID: ${gameID} is already in progress.`);
+            this.formJoin.controls['gameID'].setErrors({ alreadyInProgress: true });
         }
       },
       error: (err) => {

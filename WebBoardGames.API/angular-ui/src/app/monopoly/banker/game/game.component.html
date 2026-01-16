@@ -2,30 +2,56 @@
 
 <div class="card">
   <div class="card-header">
-    <span class="card-title">{{ g.player.name }}</span>
-    <span class="card-subtitle">{{ g.player.balance | number }} ₩</span>
+    <div class="card-title">{{ g.player.name }}</div>
+    <div class="card-subtitle">
+      <app-digits-display [value]="g.player.balance" [minDigits]="5" [postFix]="'₩'"></app-digits-display>
+    </div>
   </div>
 
-  <div class="card-quick-actions">
-    <button class="card-btn card-btn--red" (click)="onPayTowards()">⨺</button>
+  <div class="card-quick-actions" [class]="uiState() === 'default' ? '' : 'card-quick-actions--disabled'">
+    <button class="card-btn card-btn--red" (click)="onPaySend()">⨺</button>
     <button class="card-btn card-btn--round" (click)="onPaymentGo()">↢</button>
     @if (g.options.moneyOnFreeParking) {
-    <button class="card-btn card-btn--round" [disabled]="!g.freeParking || g.freeParking.balance <= 0" (click)="onFreeParking()">🚘</button> }
+    <button
+      class="card-btn card-btn--round"
+      [disabled]="!g.freeParking || g.freeParking.balance <= 0"
+      (click)="onFreeParking()"
+    >
+      🚘
+    </button>
+    }
     <button class="card-btn card-btn--green" (click)="onPayReceive()">⨹</button>
   </div>
 
-  <div>
-    @for(player of otherPlayers(); track player.id) {
-    <div>
-      <strong>{{ player.name }}</strong>
-      <p>Balance: {{ player.balance | number }} ₩</p>
-    </div>
+  @switch(uiState()) {
+    @case("default") {
+      <app-monopoly-banker-game-ui-state-default [parent$]="this"/>
     }
+    @case("pay-send") {
+      <app-monopoly-banker-game-ui-state-pay-send [parent$]="this"/>
+    }
+    @case("pay-receive") {
+      <app-monopoly-banker-game-ui-state-pay-receive [parent$]="this"/>
+    }
+    @case("passed-go") {
+      <app-monopoly-banker-game-ui-state-passed-go [parent$]="this"/>
+    }
+  }
+
+  <div class="footer-game-info">
+    <span>{{ g.label }}</span>
+    <span> - ID: {{ g.id }}</span>
+    @if (canGameShare()){<button
+      class="game-share"
+      (click)="onGameShare()"
+    >
+      Share</button
+    >}
   </div>
 
   @if (g.player.balance <= 0) {
   <div class="bankrupcy-overlay">
-    <button class="card-btn card-btn--red" (click)="onExitGame()">Exit</button>
+    <button class="card-btn card-btn--text card-btn--red" (click)="onGameExit()">Exit</button>
   </div>
   }
 </div>

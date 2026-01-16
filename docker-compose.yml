@@ -4,4 +4,11 @@ services:
     build:
       context: .
       dockerfile: WebBoardGames.API/Dockerfile
+    networks:
+      - frontend
+
+
+networks:
+  frontend:
+    internal: false
     

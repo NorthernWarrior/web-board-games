@@ -1,0 +1,118 @@
+.digits-display-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+  width: fit-content;
+  margin: auto;
+
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 0.25em;
+  padding: 0.25em 0.25em;
+
+  .digit-anim-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    width: 27px;
+    height: 35px;
+    position: relative;
+  }
+  .digit-box,
+  .digit-box-static {
+    font-size: 19px;
+    color: black;
+    width: 19px;
+    height: 27px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgb(250, 250, 250);
+    border-radius: 4px;
+    padding: 4px 4px;
+    /* Only .digit-box needs animation-specific styles: */
+  }
+  .digit-box {
+    position: relative;
+    overflow: hidden;
+  }
+  .digit-inner {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: inherit;
+    transition:
+      transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    /* background: rgba(255,0,0,0.1); */ /* Uncomment for debug */
+  }
+  .digit-inner.prev.up {
+    transform: translateY(0);
+    opacity: 1;
+    animation: digit-prev-slide-up 0.4s forwards;
+  }
+  .digit-inner.next.up {
+    transform: translateY(100%);
+    opacity: 0;
+    animation: digit-next-slide-up 0.4s forwards;
+  }
+  .digit-inner.prev.down {
+    transform: translateY(0);
+    opacity: 1;
+    animation: digit-prev-slide-down 0.4s forwards;
+  }
+  .digit-inner.next.down {
+    transform: translateY(-100%);
+    opacity: 0;
+    animation: digit-next-slide-down 0.4s forwards;
+  }
+
+  @keyframes digit-prev-slide-up {
+    0% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+  }
+  @keyframes digit-next-slide-up {
+    0% {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  @keyframes digit-prev-slide-down {
+    0% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+  }
+  @keyframes digit-next-slide-down {
+    0% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+}

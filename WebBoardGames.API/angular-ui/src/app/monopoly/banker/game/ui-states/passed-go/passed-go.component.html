@@ -1,0 +1,35 @@
+@if (parent$(); as parent) {
+  <div class="card-body-container">
+    <div class="card-body-container-title">
+      <strong>Receive {{ amount$() }} ₩</strong>
+    </div>
+    <div style="margin-top: 1em">When you pass GO, you can collect 200 ₩ from the bank.</div>
+    @if (parent$().game()?.options?.doubleMoneyOnGo) {
+      <div style="margin-top: 1em">
+        If you are standing directly on the GO field, you can collect double the amount!
+      </div>
+      <div style="margin-top: 1em">
+        <label for="passed-go-checkbox">
+          <input
+            type="checkbox"
+            id="passed-go-checkbox"
+            [ngModel]="amount$() === 400"
+            (ngModelChange)="amount$.set($event ? 400 : 200)"
+          />
+          I am standing directly on the GO field.
+        </label>
+      </div>
+    }
+
+    <div class="card-body-action-buttons">
+      <button class="card-btn card-btn--text card-btn--red" (click)="onCancel()">Cancel</button>
+      <button
+        class="card-btn card-btn--text card-btn--green"
+        [disabled]="!canAccept()"
+        (click)="onAccept()"
+      >
+        Cash-In
+      </button>
+    </div>
+  </div>
+}

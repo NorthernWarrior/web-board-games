@@ -1,0 +1,67 @@
+.card-btn {
+  border-radius: 10px;
+  border-width: 1px;
+  width: 2em;
+  height: 2em;
+  font-size: 2em;
+
+  &--round {
+    border-radius: 50%;
+  }
+
+  &--text {
+    font-size: 1em;
+    width: 6em;
+    height: 2.5em;
+  }
+  &--red {
+    background-color: rgb(216, 103, 99);
+  }
+  &--green {
+    background-color: rgb(133, 196, 121);
+  }
+}
+
+.card-body-container {
+  max-width: 90%;
+  margin: 2em auto;
+
+  &-title {
+    text-align: center;
+    font-size: 1.2em;
+  }
+}
+
+.card-body-property-grid {
+  margin-top: 1em;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: repeat(auto, auto);
+  grid-template-areas: 'name value';
+  row-gap: 0.5em;
+}
+
+.card-body-property-grid-label {
+  font-weight: 600;
+}
+.card-body-property-grid-value {
+  text-align: right;
+}
+
+.card-body-money-buttons {
+  margin-top: 1.5em;
+  width: 270px;
+  margin-left: auto;
+  margin-right: auto;
+
+  .card-btn {
+    margin: 3px;
+  }
+}
+
+.card-body-action-buttons {
+  margin-top: 1.5em;
+  display: flex;
+  justify-content: space-evenly;
+  gap: 1.5em;
+}

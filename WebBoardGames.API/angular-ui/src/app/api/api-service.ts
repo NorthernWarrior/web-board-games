@@ -1,5 +1,9 @@
-import { Injectable } from '@angular/core';
+import { EventEmitter, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
+
+export const specialPlayerID_Bank = null;
+export const specialPlayerID_FreeParking = 'free-parking';
+export type GameState = 'waiting-for-players' | 'in-progress' | 'completed';
 
 export interface GameJoinRequest {
   gameID: string;
@@ -27,54 +31,75 @@ export interface GameDataResponse {
     doubleMoneyOnGo: boolean;
   };
   freeParking: PlayerInfo | null;
+  label: string;
+  id: string;
+  state: GameState;
 }
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private _cachedGame: GameDataResponse | null = null;
+  public readonly gameChanged = new EventEmitter<GameDataResponse>();
 
-  gameExists(request: GameJoinRequest): Observable<{ exists: boolean; playerID: string | null }> {
+  gameJoin(
+    request: GameJoinRequest,
+  ): Observable<{ exists: boolean; alreadyInProgrss: boolean; playerID: string | null }> {
     // Placeholder implementation
-    return of(
-      request.gameID === '1234'
-        ? { exists: true, playerID: '5678' }
-        : { exists: false, playerID: null }
-    );
+    if (request.gameID !== '1234') {
+      return of({ exists: false, alreadyInProgrss: false, playerID: null });
+    }
+    if (!this._cachedGame) {
+      this._cachedGame = {
+        id: request.gameID,
+        players: [
+          { id: '1', name: 'Alice', balance: 1500 },
+          { id: '2', name: 'Bob', balance: 1500 },
+          { id: '5678', name: request.playerName, balance: 1500 },
+          { id: '63', name: 'Peter', balance: -22 },
+          { id: specialPlayerID_FreeParking, name: 'Free Parking', balance: 0 },
+        ],
+        player: { id: '5678', name: request.playerName, balance: 1500 },
+        options: { moneyOnFreeParking: true, doubleMoneyOnGo: true },
+        freeParking: { id: specialPlayerID_FreeParking, name: 'Free Parking', balance: 0 },
+        label: 'Test Game',
+        state: 'waiting-for-players',
+      };
+    }
+    if (this._cachedGame.state != 'waiting-for-players') {
+      return of({ exists: true, alreadyInProgrss: true, playerID: null });
+    }
+    return of({ exists: true, alreadyInProgrss: false, playerID: this._cachedGame.player.id });
   }
 
   gameCreate(request: GameCreateRequest): Observable<{ gameID: string; playerID: string }> {
     // Placeholder implementation
     this._cachedGame = {
+      id: '1234',
+      label: request.label,
       players: [
         { id: '1', name: 'Alice', balance: 1500 },
         { id: '2', name: 'Bob', balance: 1500 },
-        { id: '5678', name: 'Test', balance: 1500 },
-        { id: 'free-parking', name: 'Free Parking', balance: 0 },
-      ].filter(p => p.id !== 'free-parking' || request.moneyOnFreeParking),
-      player: { id: '5678', name: 'Test', balance: 1500 },
-      options: { moneyOnFreeParking: request.moneyOnFreeParking, doubleMoneyOnGo: request.doubleMoneyOnGo },
-      freeParking: request.moneyOnFreeParking ? { id: 'free-parking', name: 'Free Parking', balance: 0 } : null,
+        { id: '5678', name: request.playerName, balance: 1500 },
+        { id: '63', name: 'Peter', balance: -22 },
+        { id: specialPlayerID_FreeParking, name: 'Free Parking', balance: 0 },
+      ].filter((p) => p.id !== specialPlayerID_FreeParking || request.moneyOnFreeParking),
+      player: { id: '5678', name: request.playerName, balance: 1500 },
+      options: {
+        moneyOnFreeParking: request.moneyOnFreeParking,
+        doubleMoneyOnGo: request.doubleMoneyOnGo,
+      },
+      freeParking: request.moneyOnFreeParking
+        ? { id: specialPlayerID_FreeParking, name: 'Free Parking', balance: 0 }
+        : null,
+      state: 'waiting-for-players',
     };
-    return of({ gameID: '1234', playerID: '5678' });
+    return of({ gameID: this._cachedGame.id, playerID: this._cachedGame.player.id });
   }
 
-  getGameData(gameID: string): Observable<GameDataResponse | null> {
+  getGameData(gameID: string, playerID: string): Observable<GameDataResponse | null> {
     // Placeholder implementation
-    if (gameID !== '1234') {
-      return of(null);
-    }
     if (!this._cachedGame) {
-      this._cachedGame = {
-        players: [
-          { id: '1', name: 'Alice', balance: 1500 },
-          { id: '2', name: 'Bob', balance: 1500 },
-          { id: '5678', name: 'Test', balance: 1500 },
-          { id: 'free-parking', name: 'Free Parking', balance: 0 },
-        ],
-        player: { id: '5678', name: 'Test', balance: 1500 },
-        options: { moneyOnFreeParking: true, doubleMoneyOnGo: true },
-        freeParking: { id: 'free-parking', name: 'Free Parking', balance: 0 },
-      };
+      this.gameJoin({ gameID, playerName: 'Tobias' });
     }
     return of(this._cachedGame);
   }
@@ -84,10 +109,16 @@ export class ApiService {
     playerID: string,
     sourcePlayerID: string | null,
     targetPlayerID: string | null,
-    amount: number
-  ): Observable<GameDataResponse | null> {
+    amount: number,
+  ) {
     if (gameID !== '1234' || !this._cachedGame) {
-      return of(null);
+      return;
+    }
+    if (this._cachedGame.state === 'completed') {
+      return;
+    }
+    if (this._cachedGame.state === 'waiting-for-players') {
+      this._cachedGame.state = 'in-progress';
     }
     const source = sourcePlayerID
       ? this._cachedGame.players.find((p) => p.id === sourcePlayerID)
@@ -104,7 +135,12 @@ export class ApiService {
     }
 
     this._cachedGame.player = this._cachedGame.players.find((p) => p.id === playerID)!;
-    this._cachedGame.freeParking = this._cachedGame.players.find((p) => p.id === 'free-parking')!;
-    return of(this._cachedGame);
+    this._cachedGame.freeParking = this._cachedGame.players.find(
+      (p) => p.id === specialPlayerID_FreeParking,
+    )!;
+
+    setTimeout(() => {
+      this.gameChanged.emit(this._cachedGame!);
+    }, 500);
   }
 }

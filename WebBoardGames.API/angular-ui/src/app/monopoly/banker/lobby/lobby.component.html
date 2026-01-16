@@ -13,6 +13,7 @@
             <input matInput formControlName="gameID" />
             @if(formJoin.controls['gameID'].hasError('required')){<mat-error>Is required</mat-error>}
             @if(formJoin.controls['gameID'].hasError('notExists')){<mat-error>Game ID does not exist</mat-error>}
+            @if(formJoin.controls['gameID'].hasError('alreadyInProgress')){<mat-error>Game is already in progress</mat-error>}
           </mat-form-field>
         </div>
       </div>

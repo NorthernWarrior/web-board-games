@@ -69,6 +69,9 @@
               "buildTarget": "angular-ui:build:development"
             }
           },
+          "options": {
+            "allowedHosts": ["host.docker.internal"]
+          },
           "defaultConfiguration": "development"
         },
         "extract-i18n": {

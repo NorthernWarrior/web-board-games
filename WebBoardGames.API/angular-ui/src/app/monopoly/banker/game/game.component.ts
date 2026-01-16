@@ -4,64 +4,124 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService, GameDataResponse } from '../../../api/api-service';
-import { DecimalPipe } from '@angular/common';
+import { MonopolyBankerGameUiStateDefaultComponent } from './ui-states/default/default.component';
+import { MonopolyBankerGameUiStatePaySendComponent } from './ui-states/pay-send/pay-send.component';
+import { MonopolyBankerGameUiStatePayReceiveComponent } from './ui-states/pay-receive/pay-receive.component';
+import { MonopolyBankerGameUiStatePassedGoComponent } from './ui-states/passed-go/passed-go.component';
+import { SharedComponentsModule } from '../../../shared-components/shared-components.module';
+
+type UiState = 'default' | 'pay-send' | 'pay-receive' | 'passed-go';
 
 @Component({
-  imports: [ReactiveFormsModule, MatButtonModule, MatInputModule, DecimalPipe],
+  imports: [
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatInputModule,
+    SharedComponentsModule,
+    MonopolyBankerGameUiStateDefaultComponent,
+    MonopolyBankerGameUiStatePaySendComponent,
+    MonopolyBankerGameUiStatePayReceiveComponent,
+    MonopolyBankerGameUiStatePassedGoComponent,
+  ],
   templateUrl: './game.component.html',
-  styleUrl: './game.component.scss',
+  styleUrls: ['./game-styles.scss', './game.component.scss'],
 })
 export class MonopolyBankerGameComponent {
   private readonly _api = inject(ApiService);
   private readonly _router = inject(Router);
   private readonly _gameID: string;
-  readonly _playerID: string;
+  public readonly playerID = signal<string>('');
 
   public readonly game = signal<GameDataResponse | null>(null);
+  public readonly otherPlayersWithBancrupt = computed(() => {
+    const currentGame = this.game();
+    if (!currentGame) {
+      return [];
+    }
+    return currentGame.players.filter((p) => p.id !== this.playerID());
+  });
   public readonly otherPlayers = computed(() => {
     const currentGame = this.game();
     if (!currentGame) {
       return [];
     }
-    return currentGame.players.filter((p) => p.id !== this._playerID);
+    return currentGame.players.filter((p) => p.id !== this.playerID() && (p.balance > 0 || p.id === 'free-parking'));
   });
+  public readonly otherPlayersWithoutFreeParking = computed(() => {
+    const currentGame = this.game();
+    if (!currentGame) {
+      return [];
+    }
+    return currentGame.players.filter((p) => p.id !== this.playerID() && p.balance > 0 && p.id !== 'free-parking');
+  });
+
+  public readonly uiState = signal<UiState>('default');
 
   constructor(route: ActivatedRoute) {
     this._gameID = route.snapshot.params['game_id'];
-    this._playerID = route.snapshot.queryParams['player'];
+    this.playerID.set(route.snapshot.queryParams['player']);
     if (!this._gameID) {
       console.error(new Error('game_id is required to access the game component.'));
-      this.onExitGame();
+      this.onGameExit();
       return;
     }
-    if (!this._playerID) {
+    if (!this.playerID()) {
       console.error(
-        new Error('"player" query parameter is required to access the game component.')
+        new Error('"player" query parameter is required to access the game component.'),
       );
-      this.onExitGame();
+      this.onGameExit();
       return;
     }
 
     this._refreshGameData();
+    this._api.gameChanged.subscribe((updatedGame) => {
+      if (updatedGame.id !== this._gameID) {
+        return;
+      }
+      this.game.set(updatedGame);
+    });
   }
 
-  onExitGame(): void {
+  onGameExit(): void {
     this._router.navigate(['/monopoly/banker']);
   }
 
-  onPayTowards() {
-    const game = this.game();
-    if (!game || !game.freeParking) { return; }
-    this._api
-      .executePayment(this._gameID, this._playerID, this._playerID, game.freeParking.id, 150)
-      .subscribe(this._handleExecutePaymentResult.bind(this));
+  canGameShare(): boolean {
+    return !!navigator.share && this.game()?.state === 'waiting-for-players';
   }
-  onPayReceive() {}
+  onGameShare(): void {
+    if (!this.canGameShare()) {
+      return;
+    }
+    const url = window.location.href.split('?')[0];
+    console.log('Sharing game link:', url);
+    navigator
+      .share({
+        title: 'Join my Monopoly Game!',
+        text: `Come join my Monopoly Game "${this.game()?.label}"`,
+        url: url.split('?')[0],
+      })
+      .catch((error) => {
+        // Optionally handle errors here
+        console.error('Error sharing:', error);
+      });
+  }
+
+  onExecutePayment(sourcePlayerID: string | null, targetPlayerID: string | null, amount: number) {
+    this._api.executePayment(this._gameID, this.playerID(), sourcePlayerID, targetPlayerID, amount);
+  }
+
+  onPaySend() {
+    this.uiState.set('pay-send');
+  }
+  onPayReceive() {
+    this.uiState.set('pay-receive');
+  }
 
   onPaymentGo() {
-    this._api
-      .executePayment(this._gameID, this._playerID, null, this._playerID, 200)
-      .subscribe(this._handleExecutePaymentResult.bind(this));
+    this.uiState.set('passed-go');
+    // const playerID = this.playerID();
+    // this._api.executePayment(this._gameID, playerID, null, playerID, 200);
   }
   onFreeParking() {
     const game = this.game();
@@ -73,26 +133,18 @@ export class MonopolyBankerGameComponent {
     ) {
       return;
     }
-    this._api
-      .executePayment(
-        this._gameID,
-        this._playerID,
-        game.freeParking.id,
-        this._playerID,
-        game.freeParking.balance
-      )
-      .subscribe(this._handleExecutePaymentResult.bind(this));
-  }
-
-  private _handleExecutePaymentResult(result: GameDataResponse | null): void {
-    if (!result) {
-      return;
-    }
-    this.game.set(result);
+    const playerID = this.playerID();
+    this._api.executePayment(
+      this._gameID,
+      playerID,
+      game.freeParking.id,
+      playerID,
+      game.freeParking.balance,
+    );
   }
 
   private _refreshGameData(): void {
-    this._api.getGameData(this._gameID).subscribe({
+    this._api.getGameData(this._gameID, this.playerID()).subscribe({
       next: (data) => {
         this.game.set(data);
       },

@@ -10,7 +10,7 @@
   },
   "include": [
     "src/**/*.ts"
-  ],
+, "src/app/shared-components/digits-display/digits-display.component.htmls"  ],
   "exclude": [
     "src/**/*.spec.ts"
   ]

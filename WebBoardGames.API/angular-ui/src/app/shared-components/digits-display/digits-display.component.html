@@ -1,0 +1,17 @@
+<div class="digits-display-wrapper">
+  @for (digit of digitsArray(); track digit.idx) {
+    <div class="digit-anim-container">
+      <div class="digit-box">
+        @if (digit.animating) {
+          <span class="digit-inner prev" [class.up]="digit.direction === 'up'" [class.down]="digit.direction === 'down'">{{ digit.prevValue }}</span>
+          <span class="digit-inner next" [class.up]="digit.direction === 'up'" [class.down]="digit.direction === 'down'">{{ digit.value }}</span>
+        } @else {
+          <span class="digit-inner">{{ digit.value }}</span>
+        }
+      </div>
+    </div>
+  }
+  @if (postFix()) {
+    <div class="digit-box-static">{{ postFix() }}</div>
+  }
+</div>

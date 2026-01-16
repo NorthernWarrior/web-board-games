@@ -3,5 +3,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
+      - DOCKER_HOST=host.docker.internal
     ports:
       - "52102:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
