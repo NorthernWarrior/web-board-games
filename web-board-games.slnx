@@ -4,6 +4,9 @@
     <Project Path="WebBoardGames.Application/WebBoardGames.Application.csproj" />
     <Project Path="WebBoardGames.Monopoly/WebBoardGames.Monopoly.csproj" />
   </Folder>
+  <Folder Name="/src/Persistence/">
+    <Project Path="WebBoardGames.Persistence/WebBoardGames.Persistence.csproj" Id="87684e35-e0d9-4c87-a478-3a7c1eb295b0" />
+  </Folder>
   <Folder Name="/src/Presentation/">
     <Project Path="WebBoardGames.API/WebBoardGames.API.csproj" />
   </Folder>

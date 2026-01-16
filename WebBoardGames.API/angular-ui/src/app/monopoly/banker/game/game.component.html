@@ -8,7 +8,7 @@
     </div>
   </div>
 
-  <div class="card-quick-actions" [class]="uiState() === 'default' ? '' : 'card-quick-actions--disabled'">
+  <div class="card-quick-actions" [class]="uiState() === 'default' && otherPlayersWithoutFreeParking().length >= 1 ? '' : 'card-quick-actions--disabled'">
     <button class="card-btn card-btn--red" (click)="onPaySend()">⨺</button>
     <button class="card-btn card-btn--round" (click)="onPaymentGo()">↢</button>
     @if (g.options.moneyOnFreeParking) {

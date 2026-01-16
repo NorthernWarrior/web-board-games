@@ -1,0 +1,27 @@
+
+# Game Create
+POST {{baseUrl}}/api/monopoly/banker/create
+Accept: application/json
+Content-Type: application/json
+
+{
+  "label": "My Game",
+  "playerName": "Tobi"
+}
+###
+
+# Game Join
+POST {{baseUrl}}/api/monopoly/banker/join
+Accept: application/json
+Content-Type: application/json
+
+{
+  "gameID": "1234",
+  "playerName": "Bla"
+}
+###
+
+# Game Data Stream - doesnt really work in http file though because the continuous stream doesnt terminate
+GET {{baseUrl}}/api/monopoly/banker/1234/stream?playerID=B792A1E9
+Accept: application/json
+###

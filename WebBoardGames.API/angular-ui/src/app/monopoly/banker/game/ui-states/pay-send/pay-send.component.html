@@ -1,43 +1,47 @@
-@if (parent$(); as parent) { @if (parent.game(); as g){
-<div class="card-body-container">
-  <div class="card-body-container-title"><strong>Pay Money</strong></div>
-  <div class="card-body-property-grid">
-    <div class="card-body-property-grid-label">Receiver:</div>
-    <div class="card-body-property-grid-value">
-        <select (ngModelChange)="otherPlayerID$.set($event)" [ngModel]="otherPlayerID$()">
-        <option [value]="null">Bank</option>
-        @for (player of parent.otherPlayers(); track player.id) {
-        <option [value]="player.id">
-          <span style="text-align: right">{{ player.name }}</span>
-        </option>
-        }
-      </select>
+@if (parent$(); as parent) {
+  @if (parent.game(); as g) {
+    <div class="card-body-container">
+      <div class="card-body-container-title">
+        <strong>Pay Money</strong>
+        <hr />
+      </div>
+      <div class="card-body-property-grid">
+        <div class="card-body-property-grid-label">Receiver:</div>
+        <div class="card-body-property-grid-value">
+          <select (ngModelChange)="otherPlayerID$.set($event)" [ngModel]="otherPlayerID$()">
+            <option [value]="null">Bank</option>
+            @for (player of parent.otherPlayers(); track player.id) {
+              <option [value]="player.id">
+                <span style="text-align: right">{{ player.name }}</span>
+              </option>
+            }
+          </select>
+        </div>
+        <div class="card-body-property-grid-label">Amount:</div>
+        <div class="card-body-property-grid-value">{{ amount$() | number }} ₩</div>
+      </div>
+
+      <div class="card-body-money-buttons">
+        <button class="card-btn card-btn--text" (click)="onAmountIncrease(500)">+ 500 ₩</button>
+        <button class="card-btn card-btn--text" (click)="onAmountIncrease(100)">+ 100 ₩</button>
+        <button class="card-btn card-btn--text" (click)="onAmountIncrease(50)">+ 50 ₩</button>
+        <button class="card-btn card-btn--text" (click)="onAmountIncrease(20)">+ 20 ₩</button>
+        <button class="card-btn card-btn--text" (click)="onAmountIncrease(10)">+ 10 ₩</button>
+        <button class="card-btn card-btn--text" (click)="onAmountIncrease(5)">+ 5 ₩</button>
+        <button class="card-btn card-btn--text" (click)="onAmountIncrease(1)">+ 1 ₩</button>
+        <button class="card-btn card-btn--text" (click)="amount$.set(0)">C</button>
+      </div>
+
+      <div class="card-body-action-buttons">
+        <button class="card-btn card-btn--text card-btn--red" (click)="onCancel()">Cancel</button>
+        <button
+          class="card-btn card-btn--text card-btn--green"
+          [disabled]="!canAccept()"
+          (click)="onAccept()"
+        >
+          Send
+        </button>
+      </div>
     </div>
-    <div class="card-body-property-grid-label">Amount:</div>
-    <div class="card-body-property-grid-value">{{ amount$() | number }} ₩</div>
-  </div>
-
-  <div class="card-body-money-buttons">
-    <button class="card-btn card-btn--text" (click)="onAmountIncrease(500)">+ 500 ₩</button>
-    <button class="card-btn card-btn--text" (click)="onAmountIncrease(100)">+ 100 ₩</button>
-    <button class="card-btn card-btn--text" (click)="onAmountIncrease(50)">+ 50 ₩</button>
-    <button class="card-btn card-btn--text" (click)="onAmountIncrease(20)">+ 20 ₩</button>
-    <button class="card-btn card-btn--text" (click)="onAmountIncrease(10)">+ 10 ₩</button>
-    <button class="card-btn card-btn--text" (click)="onAmountIncrease(5)">+ 5 ₩</button>
-    <button class="card-btn card-btn--text" (click)="onAmountIncrease(1)">+ 1 ₩</button>
-    <button class="card-btn card-btn--text" (click)="amount$.set(0)">C</button>
-  </div>
-
-
-  <div class="card-body-action-buttons">
-    <button class="card-btn card-btn--text card-btn--red" (click)="onCancel()">Cancel</button>
-    <button
-      class="card-btn card-btn--text card-btn--green"
-      [disabled]="!canAccept()"
-      (click)="onAccept()"
-    >
-      Send
-    </button>
-  </div>
-</div>
-} }
+  }
+}

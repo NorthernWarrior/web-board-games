@@ -17,7 +17,7 @@ export class MonopolyBankerLobbyComponent {
   private readonly _router = inject(Router);
   private readonly _route = inject(ActivatedRoute);
 
-  constructor(fb: FormBuilder) {
+  constructor(fb: FormBuilder, route: ActivatedRoute) {
     this.formJoin = fb.group<GameJoinRequest>({
       gameID: '',
       playerName: '',
@@ -33,6 +33,11 @@ export class MonopolyBankerLobbyComponent {
     });
     this.formCreate.controls['label'].addValidators([Validators.required]);
     this.formCreate.controls['playerName'].addValidators([Validators.required]);
+
+    const gameIDFromQuery = route.snapshot.queryParamMap.get('game');
+    if (gameIDFromQuery) {
+      this.formJoin.controls['gameID'].setValue(gameIDFromQuery);
+    }
   }
 
   onGameJoin(): void {

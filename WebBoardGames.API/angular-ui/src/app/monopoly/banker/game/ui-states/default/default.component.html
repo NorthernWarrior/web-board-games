@@ -1,24 +1,34 @@
 @if (parent$(); as parent) {
   <div class="card-body-container other-balances-list">
-    <div class="card-body-container-title"><strong>Balances</strong></div>
+    <div class="card-body-container-title">
+      <strong>Balances</strong>
+      <hr />
+    </div>
     <div class="card-body-property-grid">
       @for (player of parent.otherPlayersWithBancrupt(); track player.id) {
-        @if (player.id === 'free-parking') {
-          <div class="card-body-property-grid-label"><hr /></div>
-          <div class="card-body-property-grid-value"><hr /></div>
+        @if (player.id !== 'free-parking') {
+          <div
+            class="card-body-property-grid-label"
+            [class]="player.balance <= 0 ? 'strikethrough' : ''"
+          >
+            {{ player.name }}
+          </div>
+          <div
+            class="card-body-property-grid-value"
+            [class]="player.balance <= 0 ? 'strikethrough' : ''"
+          >
+            {{ player.balance | number }} ₩
+          </div>
         }
-        <div
-          class="card-body-property-grid-label"
-          [class]="player.balance <= 0 && player.id !== 'free-parking' ? 'strikethrough' : ''"
-        >
-          {{ player.name }}
+      }
+      @if (parent.game()?.freeParking; as freeParking) {
+        <div class="card-body-property-grid-label"><hr /></div>
+        <div class="card-body-property-grid-value"><hr /></div>
+
+        <div class="card-body-property-grid-label">
+          {{ freeParking.name }}
         </div>
-        <div
-          class="card-body-property-grid-value"
-          [class]="player.balance <= 0 && player.id !== 'free-parking' ? 'strikethrough' : ''"
-        >
-          {{ player.balance | number }} ₩
-        </div>
+        <div class="card-body-property-grid-value">{{ freeParking.balance | number }} ₩</div>
       }
     </div>
   </div>

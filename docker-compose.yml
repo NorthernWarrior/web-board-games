@@ -6,9 +6,23 @@ services:
       dockerfile: WebBoardGames.API/Dockerfile
     networks:
       - frontend
+      - backend
+    environment:
+      - DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    volumes:
+      - ./docker_data/mongodb:/data/db
+    restart: always
+    networks:
+      - backend
 
 
 networks:
   frontend:
     internal: false
+  backend:
+    internal: true
     

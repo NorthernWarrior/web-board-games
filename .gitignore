@@ -422,3 +422,4 @@ FodyWeavers.xsd
 
 .vscode
 appsettings.Development.json
+docker_data

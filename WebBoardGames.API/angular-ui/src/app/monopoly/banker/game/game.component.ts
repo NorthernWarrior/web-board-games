@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, PLATFORM_ID, signal } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
@@ -10,6 +10,7 @@ import { MonopolyBankerGameUiStatePayReceiveComponent } from './ui-states/pay-re
 import { MonopolyBankerGameUiStatePassedGoComponent } from './ui-states/passed-go/passed-go.component';
 import { SharedComponentsModule } from '../../../shared-components/shared-components.module';
 import { MonopolyBankerGameUiStateFreeParkingComponent } from './ui-states/free-parking/free-parking.component';
+import { isPlatformBrowser } from '@angular/common';
 
 type UiState = 'default' | 'pay-send' | 'pay-receive' | 'passed-go' | 'free-parking';
 
@@ -31,6 +32,7 @@ type UiState = 'default' | 'pay-send' | 'pay-receive' | 'passed-go' | 'free-park
 export class MonopolyBankerGameComponent {
   private readonly _api = inject(ApiService);
   private readonly _router = inject(Router);
+  private readonly _platformId = inject(PLATFORM_ID);
   private readonly _gameID: string;
   public readonly playerID = signal<string>('');
 
@@ -47,14 +49,18 @@ export class MonopolyBankerGameComponent {
     if (!currentGame) {
       return [];
     }
-    return currentGame.players.filter((p) => p.id !== this.playerID() && (p.balance > 0 || p.id === 'free-parking'));
+    return currentGame.players.filter(
+      (p) => p.id !== this.playerID() && (p.balance > 0 || p.id === 'free-parking'),
+    );
   });
   public readonly otherPlayersWithoutFreeParking = computed(() => {
     const currentGame = this.game();
     if (!currentGame) {
       return [];
     }
-    return currentGame.players.filter((p) => p.id !== this.playerID() && p.balance > 0 && p.id !== 'free-parking');
+    return currentGame.players.filter(
+      (p) => p.id !== this.playerID() && p.balance > 0 && p.id !== 'free-parking',
+    );
   });
 
   public readonly uiState = signal<UiState>('default');
@@ -76,12 +82,6 @@ export class MonopolyBankerGameComponent {
     }
 
     this._refreshGameData();
-    this._api.gameChanged.subscribe((updatedGame) => {
-      if (updatedGame.id !== this._gameID) {
-        return;
-      }
-      this.game.set(updatedGame);
-    });
   }
 
   onGameExit(): void {
@@ -95,13 +95,14 @@ export class MonopolyBankerGameComponent {
     if (!this.canGameShare()) {
       return;
     }
-    const url = window.location.href.split('?')[0];
+    const l = window.location;
+    const url = `${l.protocol}//${l.host}/monopoly/banker?game=${this._gameID}`;
     console.log('Sharing game link:', url);
     navigator
       .share({
         title: 'Join my Monopoly Game!',
         text: `Come join my Monopoly Game "${this.game()?.label}"`,
-        url: url.split('?')[0],
+        url: url,
       })
       .catch((error) => {
         // Optionally handle errors here
@@ -110,7 +111,7 @@ export class MonopolyBankerGameComponent {
   }
 
   onExecutePayment(sourcePlayerID: string | null, targetPlayerID: string | null, amount: number) {
-    this._api.executePayment(this._gameID, this.playerID(), sourcePlayerID, targetPlayerID, amount);
+    this._api.paymentExecute(this._gameID, sourcePlayerID, targetPlayerID, amount);
   }
 
   onPaySend() {
@@ -135,17 +136,19 @@ export class MonopolyBankerGameComponent {
     ) {
       return;
     }
-    this.uiState.set("free-parking");
+    this.uiState.set('free-parking');
   }
 
   private _refreshGameData(): void {
-    this._api.getGameData(this._gameID, this.playerID()).subscribe({
-      next: (data) => {
-        this.game.set(data);
-      },
-      error: (err) => {
-        console.error('Error fetching game data:', err);
-      },
-    });
+    if (isPlatformBrowser(this._platformId)) {
+      this._api.getGameData(this._gameID, this.playerID()).subscribe({
+        next: (data) => {
+          this.game.set(data);
+        },
+        error: (err) => {
+          console.error('Error fetching game data:', err);
+        },
+      });
+    }
   }
 }

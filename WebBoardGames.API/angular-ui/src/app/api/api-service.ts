@@ -1,4 +1,6 @@
-import { EventEmitter, Injectable } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { EventEmitter, Inject, inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { Observable, of } from 'rxjs';
 
 export const specialPlayerID_Bank = null;
@@ -38,109 +40,69 @@ export interface GameDataResponse {
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  private _cachedGame: GameDataResponse | null = null;
-  public readonly gameChanged = new EventEmitter<GameDataResponse>();
-
-  gameJoin(
-    request: GameJoinRequest,
-  ): Observable<{ exists: boolean; alreadyInProgrss: boolean; playerID: string | null }> {
-    // Placeholder implementation
-    if (request.gameID !== '1234') {
-      return of({ exists: false, alreadyInProgrss: false, playerID: null });
-    }
-    if (!this._cachedGame) {
-      this._cachedGame = {
-        id: request.gameID,
-        players: [
-          { id: '1', name: 'Alice', balance: 1500 },
-          { id: '2', name: 'Bob', balance: 1500 },
-          { id: '5678', name: request.playerName, balance: 1500 },
-          { id: '63', name: 'Peter', balance: -22 },
-          { id: specialPlayerID_FreeParking, name: 'Free Parking', balance: 0 },
-        ],
-        player: { id: '5678', name: request.playerName, balance: 1500 },
-        options: { moneyOnFreeParking: true, doubleMoneyOnGo: true },
-        freeParking: { id: specialPlayerID_FreeParking, name: 'Free Parking', balance: 0 },
-        label: 'Test Game',
-        state: 'waiting-for-players',
-      };
-    }
-    if (this._cachedGame.state != 'waiting-for-players') {
-      return of({ exists: true, alreadyInProgrss: true, playerID: null });
-    }
-    return of({ exists: true, alreadyInProgrss: false, playerID: this._cachedGame.player.id });
-  }
+  private readonly _baseUrl = '';
+  private readonly _client = inject(HttpClient);
+  private readonly _platformId = inject(PLATFORM_ID);
 
   gameCreate(request: GameCreateRequest): Observable<{ gameID: string; playerID: string }> {
-    // Placeholder implementation
-    this._cachedGame = {
-      id: '1234',
-      label: request.label,
-      players: [
-        { id: '1', name: 'Alice', balance: 1500 },
-        { id: '2', name: 'Bob', balance: 1500 },
-        { id: '5678', name: request.playerName, balance: 1500 },
-        { id: '63', name: 'Peter', balance: -22 },
-        { id: specialPlayerID_FreeParking, name: 'Free Parking', balance: 0 },
-      ].filter((p) => p.id !== specialPlayerID_FreeParking || request.moneyOnFreeParking),
-      player: { id: '5678', name: request.playerName, balance: 1500 },
-      options: {
-        moneyOnFreeParking: request.moneyOnFreeParking,
-        doubleMoneyOnGo: request.doubleMoneyOnGo,
-      },
-      freeParking: request.moneyOnFreeParking
-        ? { id: specialPlayerID_FreeParking, name: 'Free Parking', balance: 0 }
-        : null,
-      state: 'waiting-for-players',
-    };
-    return of({ gameID: this._cachedGame.id, playerID: this._cachedGame.player.id });
+    return this._client.post<{ gameID: string; playerID: string }>(
+      `${this._baseUrl}/api/monopoly/banker/create`,
+      request,
+    );
+  }
+
+  gameJoin(request: GameJoinRequest) {
+    return this._client.post<{
+      exists: boolean;
+      alreadyInProgress: boolean;
+      playerID: string | null;
+    }>(`${this._baseUrl}/api/monopoly/banker/join`, request);
   }
 
   getGameData(gameID: string, playerID: string): Observable<GameDataResponse | null> {
-    // Placeholder implementation
-    if (!this._cachedGame) {
-      this.gameJoin({ gameID, playerName: 'Tobias' });
-    }
-    return of(this._cachedGame);
+    return new Observable<GameDataResponse | null>((observer) => {
+      if (!isPlatformBrowser(this._platformId)) {
+        observer.error('EventSource is only available in the browser');
+        return;
+      }
+      const url = `${this._baseUrl}/api/monopoly/banker/${gameID}/stream?playerID=${playerID}`;
+      const eventSource = new EventSource(url);
+
+      eventSource.addEventListener('monopoly-banker-game-data', (event: MessageEvent) => {
+        observer.next(JSON.parse(event.data, (key, value) => {
+          if (key === "state" && typeof value === "number") {
+            return ['waiting-for-players', 'in-progress', 'completed'][value];
+          }
+          return value;
+        }));
+      });
+
+      eventSource.onerror = (error) => {
+        observer.error(error);
+        eventSource.close();
+      };
+
+      return () => {
+        eventSource.close();
+      };
+    });
   }
 
-  executePayment(
+  paymentExecute(
     gameID: string,
-    playerID: string,
     sourcePlayerID: string | null,
     targetPlayerID: string | null,
     amount: number,
   ) {
-    if (gameID !== '1234' || !this._cachedGame) {
-      return;
-    }
-    if (this._cachedGame.state === 'completed') {
-      return;
-    }
-    if (this._cachedGame.state === 'waiting-for-players') {
-      this._cachedGame.state = 'in-progress';
-    }
-    const source = sourcePlayerID
-      ? this._cachedGame.players.find((p) => p.id === sourcePlayerID)
-      : null;
-    const target = targetPlayerID
-      ? this._cachedGame.players.find((p) => p.id === targetPlayerID)
-      : null;
-
-    if (source) {
-      source.balance -= amount;
-    }
-    if (target) {
-      target.balance += amount;
-    }
-
-    this._cachedGame.player = this._cachedGame.players.find((p) => p.id === playerID)!;
-    this._cachedGame.freeParking = this._cachedGame.players.find(
-      (p) => p.id === specialPlayerID_FreeParking,
-    )!;
-
-    setTimeout(() => {
-      this.gameChanged.emit(this._cachedGame!);
-    }, 500);
+    return this._client.post<{
+      exists: boolean;
+      alreadyInProgress: boolean;
+      playerID: string | null;
+    }>(`${this._baseUrl}/api/monopoly/banker/payment`, {
+      gameID,
+      sourcePlayerID,
+      targetPlayerID,
+      amount,
+    }).subscribe();
   }
 }

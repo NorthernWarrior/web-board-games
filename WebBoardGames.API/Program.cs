@@ -1,5 +1,11 @@
-using System.Text.Json.Serialization;
+using FastEndpoints;
+using FastEndpoints.Swagger;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.FeatureManagement;
+using System.Threading.RateLimiting;
 using WebBoardGames.API;
+using WebBoardGames.Monopoly.Services;
+using WebBoardGames.Persistence;
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
@@ -9,24 +15,102 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi()
+    .AddLocalization(options => options.ResourcesPath = "Resources")
+    .AddFeatureManagement(builder.Configuration.GetSection("Features"))
+    .Services.AddRateLimiter(options =>
+    {
+        options.RejectionStatusCode = 429;
+        options.AddPolicy("GameCreatePolicy", httpContext => RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromDays(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0,
+                AutoReplenishment = true,
+            }));
+        options.AddPolicy("GameJoinPolicy", httpContext => RateLimitPartition.GetFixedWindowLimiter(
+           partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+           factory: _ => new FixedWindowRateLimiterOptions
+           {
+               PermitLimit = 20,
+               Window = TimeSpan.FromDays(1),
+               QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+               QueueLimit = 0,
+               AutoReplenishment = true,
+           }));
+    })
+    .RegisterServicesFromMonopoly();
 builder.AddMinimalApiAngular($"http://{builder.Configuration["DOCKER_HOST"] ?? "localhost"}:4200");
+
+var mongoConnectionString = builder.Configuration.GetConnectionString("MongoDb")!;
+builder.Services.AddDbContext<BoardGamesDbContext>(x => x
+    .EnableSensitiveDataLogging(builder.Environment.IsDevelopment())
+    .UseMongoDB(mongoConnectionString, "web-board-games")
+);
+
+builder.Services
+    .AddFastEndpoints(o =>
+    {
+        o.SourceGeneratorDiscoveredTypes.AddRange(WebBoardGames.Monopoly.DiscoveredTypes.All);
+    });
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.SwaggerDocument(o =>
+     {
+         o.DocumentSettings = s =>
+         {
+             s.Title = "Web Board Games API";
+             s.Version = "v1";
+             s.DocumentName = "v1";
+         };
+     });
+}
 
 var app = builder.Build();
 
+
+var supportedCultures = new[] { "en", "en-US", "de", "de-DE" };
+app.UseRequestLocalization(opts =>
+{
+    opts.ApplyCurrentCultureToResponseHeaders = true;
+    opts.SetDefaultCulture("en");
+    opts.AddSupportedCultures(supportedCultures);
+    opts.AddSupportedUICultures(supportedCultures);
+});
+
+app.UseMinimalApiAngular("angular-ui")
+
+    .UseFastEndpoints(options =>
+    {
+        options.Endpoints.RoutePrefix = "api";
+        options.Serializer.Options.TypeInfoResolver = AppJsonSerializerContext.Default;
+    });
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwaggerGen();
 }
 
-app.UseMinimalApiAngular("angular-ui");
+#if DEBUG
+var context = app.Services.CreateScope().ServiceProvider.GetRequiredService<BoardGamesDbContext>();
+context.Database.AutoTransactionBehavior = AutoTransactionBehavior.Never;
+context.MonopolyBankerGames.RemoveRange(context.MonopolyBankerGames.Where(e => e.ExternalID == "1234"));
+context.MonopolyBankerGames.Add(new()
+{
+    ID = MongoDB.Bson.ObjectId.GenerateNewId(),
+    ExternalID = "1234",
+    Label = "Test Game",
+    State = WebBoardGames.Persistence.Entities.Monopoly.Banker.MonopolyBankerGameState.WaitingForPlayers,
+    Players = [new() { ID = MongoDB.Bson.ObjectId.GenerateNewId(), ExternalID = "free-parking", Name = "Free Parking", Balance = 0 }],
+    Options = new() { DoubleMoneyOnGo = true, MoneyOnFreeParking = true },
+    CreatedUTC = DateTime.UtcNow,
+    UpdatedUTC = DateTime.UtcNow,
+});
+await context.SaveChangesAsync();
+#endif
 
 await app.RunAsync();
-
-public record Todo(int Id, string? Title, DateOnly? DueBy = null, bool IsComplete = false);
-
-[JsonSerializable(typeof(Todo[]))]
-internal partial class AppJsonSerializerContext : JsonSerializerContext
-{
-
-}

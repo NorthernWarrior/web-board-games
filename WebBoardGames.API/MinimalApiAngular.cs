@@ -33,7 +33,7 @@ public static class MinimalApiAngular
             ]);
     }
 
-    public static void UseMinimalApiAngular(this WebApplication app, string angularDistPath)
+    public static WebApplication UseMinimalApiAngular(this WebApplication app, string angularDistPath)
     {
         if (app.Environment.IsDevelopment())
         {
@@ -43,6 +43,7 @@ public static class MinimalApiAngular
         {
             UseAngularStaticFiles(app, angularDistPath);
         }
+        return app;
     }
 
     private static void UseAngularDevProxy(WebApplication app)

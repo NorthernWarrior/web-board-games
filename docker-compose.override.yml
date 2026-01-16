@@ -4,7 +4,15 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
       - DOCKER_HOST=host.docker.internal
+      - ConnectionStrings__MongoDb=mongodb://admin:admin@mongodb:27017
     ports:
       - "52102:8080"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  mongodb:  
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+    ports:
+      - "27017:27017"

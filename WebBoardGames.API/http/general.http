@@ -1,0 +1,6 @@
+
+# Swagger Documentation
+GET {{baseUrl}}/swagger
+Accept: application/json
+
+###
