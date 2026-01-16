@@ -9,8 +9,9 @@ import { MonopolyBankerGameUiStatePaySendComponent } from './ui-states/pay-send/
 import { MonopolyBankerGameUiStatePayReceiveComponent } from './ui-states/pay-receive/pay-receive.component';
 import { MonopolyBankerGameUiStatePassedGoComponent } from './ui-states/passed-go/passed-go.component';
 import { SharedComponentsModule } from '../../../shared-components/shared-components.module';
+import { MonopolyBankerGameUiStateFreeParkingComponent } from './ui-states/free-parking/free-parking.component';
 
-type UiState = 'default' | 'pay-send' | 'pay-receive' | 'passed-go';
+type UiState = 'default' | 'pay-send' | 'pay-receive' | 'passed-go' | 'free-parking';
 
 @Component({
   imports: [
@@ -22,6 +23,7 @@ type UiState = 'default' | 'pay-send' | 'pay-receive' | 'passed-go';
     MonopolyBankerGameUiStatePaySendComponent,
     MonopolyBankerGameUiStatePayReceiveComponent,
     MonopolyBankerGameUiStatePassedGoComponent,
+    MonopolyBankerGameUiStateFreeParkingComponent,
   ],
   templateUrl: './game.component.html',
   styleUrls: ['./game-styles.scss', './game.component.scss'],
@@ -133,14 +135,7 @@ export class MonopolyBankerGameComponent {
     ) {
       return;
     }
-    const playerID = this.playerID();
-    this._api.executePayment(
-      this._gameID,
-      playerID,
-      game.freeParking.id,
-      playerID,
-      game.freeParking.balance,
-    );
+    this.uiState.set("free-parking");
   }
 
   private _refreshGameData(): void {

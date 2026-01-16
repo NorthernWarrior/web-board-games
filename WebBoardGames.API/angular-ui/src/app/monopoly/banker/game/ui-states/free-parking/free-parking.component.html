@@ -1,0 +1,19 @@
+@if (parent$(); as parent) {
+  <div class="card-body-container">
+    <div class="card-body-container-title">
+      <strong>Receive {{ amount$() }} ₩</strong>
+    </div>
+    <div style="margin-top: 1em">Do you want to collect the money on Free Parking?</div>
+
+    <div class="card-body-action-buttons">
+      <button class="card-btn card-btn--text card-btn--red" (click)="onCancel()">Cancel</button>
+      <button
+        class="card-btn card-btn--text card-btn--green"
+        [disabled]="!canAccept()"
+        (click)="onAccept()"
+      >
+        Cash-In
+      </button>
+    </div>
+  </div>
+}

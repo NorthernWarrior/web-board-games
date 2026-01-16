@@ -9,7 +9,7 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['../../game-styles.scss', './passed-go.component.scss'],
 })
 export class MonopolyBankerGameUiStatePassedGoComponent extends PaySendOrReceiveBaseComponent {
-  console = console;
+
   constructor() {
     super();
     this._direction = 'receive';
