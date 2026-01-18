@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Testcontainers.MongoDb;
+using DotNet.Testcontainers.Builders;
 using WebBoardGames.Persistence;
 
 namespace WebBoardGames.API.Tests.Fixtures;
@@ -24,6 +25,9 @@ public class WebApplicationFixture : IAsyncLifetime
 
         await _mongoContainer.StartAsync();
         MongoConnectionString = _mongoContainer.GetConnectionString();
+        
+        // Give MongoDB a moment to fully initialize
+        await Task.Delay(3000);
     }
 
     public async Task<IAlbaHost> CreateHost()

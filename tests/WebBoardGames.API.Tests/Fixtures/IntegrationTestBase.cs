@@ -25,7 +25,7 @@ public abstract class IntegrationTestBase : IClassFixture<WebApplicationFixture>
     {
         if (ServiceScope != null)
         {
-            await CleanupDatabase();
+            // Skip cleanup - let fixture handle container disposal
             ServiceScope.Dispose();
             ServiceScope = null;
         }
