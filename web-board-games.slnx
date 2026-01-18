@@ -10,6 +10,10 @@
   <Folder Name="/src/Presentation/">
     <Project Path="WebBoardGames.API/WebBoardGames.API.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="WebBoardGames.Application.Tests/WebBoardGames.Application.Tests.csproj" />
+    <Project Path="tests/WebBoardGames.API.Tests/WebBoardGames.API.Tests.csproj" />
+  </Folder>
   <Project Path="docker-compose.dcproj">
     <Build />
   </Project>
