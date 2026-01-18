@@ -66,9 +66,16 @@ public class GameDataStreamEndpoint(BoardGamesDbContext _context, MonopolyBanker
 
     }
 
-    private GameDataStreamResponse MapGameDataStreamResponseFrom(Game game, string playerID)
+    private static GameDataStreamResponse MapGameDataStreamResponseFrom(Game game, string playerID)
     {
-        var players = game.Players.Select(x => new GameDataStreamResponse.PlayerInfo(x.ExternalID, x.Name, x.Balance)).ToList();
+        var players = game.Players.Select(x => new GameDataStreamResponse.PlayerInfo(
+            x.ExternalID,
+            x.Name,
+            x.Balance,
+            x.ID == game.GameOwnerPlayerID,
+            x.Balance <= 0,
+            game.State == MonopolyBankerGameState.Completed && x.Balance == game.Players.Max(p => p.Balance)
+        )).ToList();
         var player = players.First(x => x.ID == playerID);
         var freeParking = players.FirstOrDefault(x => x.ID == "free-parking");
         return new(

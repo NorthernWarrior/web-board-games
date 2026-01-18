@@ -86,5 +86,34 @@ public static class MinimalApiAngular
             FileProvider = new PhysicalFileProvider(fullPath),
             RequestPath = ""
         });
+
+        // Custom middleware: recursively serve index.html from parent directories
+        app.Use(async (context, next) =>
+        {
+            if (context.Request.Method == "GET" &&
+                !context.Request.Path.StartsWithSegments("/api") &&
+                !context.Request.Path.StartsWithSegments("/swagger"))
+            {
+                var reqPath = context.Request.Path.Value?.TrimEnd('/') ?? "";
+                var segments = reqPath.TrimStart('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+                for (int i = segments.Length; i >= 0; i--)
+                {
+                    var tryPath = string.Join('/', segments.Take(i));
+                    var indexPath = string.IsNullOrEmpty(tryPath)
+                        ? Path.Combine(angularDistPath, "index.html")
+                        : Path.Combine(angularDistPath, tryPath, "index.html");
+                    if (File.Exists(indexPath))
+                    {
+                        context.Response.ContentType = "text/html";
+                        await context.Response.SendFileAsync(indexPath);
+                        return;
+                    }
+                }
+            }
+            await next();
+        });
+
+        // Fallback to root index.html for SPA
+        app.MapFallbackToFile("index.html");
     }
 }

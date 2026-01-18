@@ -1,75 +1,123 @@
-<div>
-  <h1>Monopoly Banker Lobby</h1>
+<div class="carousel">
+  <div class="card">
+    <div class="card-header card-header--purple">
+      <div class="card-title">Welcome to Monopoly Banker</div>
+      <div class="card-subtitle">Join a Game</div>
+    </div>
+
+    <div>
+      <form [formGroup]="formJoin">
+        <div class="row">
+          <div class="col">
+            <mat-form-field>
+              <mat-label>Game ID</mat-label>
+              <input matInput formControlName="gameID" />
+              @if (formJoin.controls['gameID'].hasError('required')) {
+                <mat-error>Is required</mat-error>
+              }
+              @if (formJoin.controls['gameID'].hasError('notExists')) {
+                <mat-error>Game ID does not exist</mat-error>
+              }
+              @if (formJoin.controls['gameID'].hasError('alreadyInProgress')) {
+                <mat-error>Game is already in progress</mat-error>
+              }
+            </mat-form-field>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <mat-form-field>
+              <mat-label>Player Name</mat-label>
+              <input matInput formControlName="playerName" />
+              @if (formJoin.controls['playerName'].hasError('required')) {
+                <mat-error>Is required</mat-error>
+              }
+            </mat-form-field>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col"></div>
+          <div class="col">
+            <button mat-raised-button [disabled]="formJoin.invalid" (click)="onGameJoin()">
+              Join
+            </button>
+          </div>
+          <div class="col"></div>
+        </div>
+      </form>
+    </div>
+
+    <ng-container *ngTemplateOutlet="footerInfo">
+    </ng-container>
+  </div>
+
+  <div class="card">
+    <div class="card-header card-header--orange">
+      <div class="card-title"></div>
+      <div class="card-subtitle">Create a new Game</div>
+    </div>
+    <div>
+      <form [formGroup]="formCreate">
+        <div class="row">
+          <div class="col">
+            <mat-form-field>
+              <mat-label>Game Label</mat-label>
+              <input matInput formControlName="label" />
+            </mat-form-field>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <mat-form-field>
+              <mat-label>Player Name</mat-label>
+              <input matInput formControlName="playerName" />
+              @if (formCreate.controls['playerName'].hasError('required')) {
+                <mat-error>Is required</mat-error>
+              }
+            </mat-form-field>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <span><strong>Additional Rules</strong></span>
+          </div>
+        </div>
+        <div class="row" style="margin-top: 1em">
+          <div class="col">
+            <mat-slide-toggle formControlName="moneyOnFreeParking"
+              >Money on Free Parking</mat-slide-toggle
+            >
+          </div>
+        </div>
+        <div class="row" style="margin-top: 1em">
+          <div class="col">
+            <mat-slide-toggle formControlName="doubleMoneyOnGo"
+              >Double Money on Go</mat-slide-toggle
+            >
+          </div>
+        </div>
+        <hr style="margin-top: 1em" />
+        <div class="row" style="margin-top: 1em">
+          <div class="col"></div>
+          <div class="col">
+            <button mat-raised-button [disabled]="formCreate.invalid" (click)="onGameCreate()">
+              Create
+            </button>
+          </div>
+          <div class="col"></div>
+        </div>
+      </form>
+    </div>
+
+    <ng-container *ngTemplateOutlet="footerInfo">
+    </ng-container>
+  </div>
 </div>
-<hr />
-<div>
-  <form [formGroup]="formJoin">
-    <fieldset>
-      <legend>Join a Game</legend>
-      <div class="row">
-        <div class="col">
-          <mat-form-field>
-            <mat-label>Game ID</mat-label>
-            <input matInput formControlName="gameID" />
-            @if(formJoin.controls['gameID'].hasError('required')){<mat-error>Is required</mat-error>}
-            @if(formJoin.controls['gameID'].hasError('notExists')){<mat-error>Game ID does not exist</mat-error>}
-            @if(formJoin.controls['gameID'].hasError('alreadyInProgress')){<mat-error>Game is already in progress</mat-error>}
-          </mat-form-field>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <mat-form-field>
-            <mat-label>Player Name</mat-label>
-            <input matInput formControlName="playerName" />
-            @if(formJoin.controls['playerName'].hasError('required')){<mat-error>Is required</mat-error>}
-          </mat-form-field>
-        </div>
-        <div class="col">
-          <button mat-raised-button [disabled]="formJoin.invalid" (click)="onGameJoin()">Join</button>
-        </div>
-      </div>
-    </fieldset>
-  </form>
-</div>
-<br />
-<div>
-  <form [formGroup]="formCreate">
-    <fieldset>
-      <legend>Create a new Game</legend>
-      <div class="row">
-        <div class="col">
-          <mat-form-field>
-            <mat-label>Game Label</mat-label>
-            <input matInput formControlName="label" />
-          </mat-form-field>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <mat-form-field>
-            <mat-label>Player Name</mat-label>
-            <input matInput formControlName="playerName" />
-            @if(formCreate.controls['playerName'].hasError('required')){<mat-error>Is required</mat-error>}
-          </mat-form-field>
-        </div>
-        <div class="col">
-          <button mat-raised-button [disabled]="formCreate.invalid" (click)="onGameCreate()">Create</button>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-            <span>Additional Options</span>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col">
-          <mat-slide-toggle formControlName="moneyOnFreeParking">Money on Free Parking</mat-slide-toggle>
-        </div>
-        <div class="col">
-          <mat-slide-toggle formControlName="doubleMoneyOnGo">Double Money on Go</mat-slide-toggle>
-        </div>
-      </div>
-    </fieldset>
-  </form>
-</div>
+
+
+<ng-template #footerInfo>
+  <div class="footer-info">
+    <span>&lt;&lt; Swipe left or right to switch between join and create game >></span><br/>
+    <span>Monopoly Banker - v {{ version }} - Tobias Michel © {{ year }}</span>
+  </div>
+</ng-template>

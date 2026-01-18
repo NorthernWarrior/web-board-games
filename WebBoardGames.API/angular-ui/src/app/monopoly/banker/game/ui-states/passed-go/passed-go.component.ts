@@ -6,7 +6,7 @@ import { FormsModule } from '@angular/forms';
   imports: [FormsModule],
   selector: 'app-monopoly-banker-game-ui-state-passed-go',
   templateUrl: './passed-go.component.html',
-  styleUrls: ['../../game-styles.scss', './passed-go.component.scss'],
+  styleUrls: ['../../../game-styles.scss', './passed-go.component.scss'],
 })
 export class MonopolyBankerGameUiStatePassedGoComponent extends PaySendOrReceiveBaseComponent {
 

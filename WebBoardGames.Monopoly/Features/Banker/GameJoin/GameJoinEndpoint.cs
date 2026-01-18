@@ -51,6 +51,7 @@ public partial class GameJoinEndpoint(BoardGamesDbContext _context, MonopolyBank
 
         game.Players.Add(player);
         game.UpdatedUTC = DateTime.UtcNow;
+        game.GameOwnerPlayerID ??= player.ID;
 
         await _context.SaveChangesAsync(ct);
 

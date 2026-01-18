@@ -1,7 +1,7 @@
 @if (game(); as g) {
 
 <div class="card">
-  <div class="card-header">
+  <div class="card-header card-header--green">
     <div class="card-title">{{ g.player.name }}</div>
     <div class="card-subtitle">
       <app-digits-display [value]="g.player.balance" [minDigits]="5" [postFix]="'₩'"></app-digits-display>
@@ -52,9 +52,13 @@
     >}
   </div>
 
-  @if (g.player.balance <= 0) {
+  @if (g.player.isBankcrupt) {
   <div class="bankrupcy-overlay">
     <button class="card-btn card-btn--text card-btn--red" (click)="onGameExit()">Exit</button>
+  </div>
+  } @else if (g.player.isWinner) {
+    <div class="winner-overlay">
+    <button class="card-btn card-btn--text card-btn--green" (click)="onGameExit()">Exit</button>
   </div>
   }
 </div>

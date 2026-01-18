@@ -82,8 +82,10 @@ app.UseRequestLocalization(opts =>
     opts.AddSupportedUICultures(supportedCultures);
 });
 
-app.UseMinimalApiAngular("angular-ui")
 
+// Use the correct Angular static output directory for production, with absolute path
+var angularPath = Path.Combine(Directory.GetCurrentDirectory(), "angular-ui", "browser");
+app.UseMinimalApiAngular(angularPath)
     .UseFastEndpoints(options =>
     {
         options.Endpoints.RoutePrefix = "api";
@@ -111,6 +113,7 @@ if (!app.Environment.EnvironmentName.Equals("Test", StringComparison.OrdinalIgno
         Options = new() { DoubleMoneyOnGo = true, MoneyOnFreeParking = true },
         CreatedUTC = DateTime.UtcNow,
         UpdatedUTC = DateTime.UtcNow,
+        GameOwnerPlayerID = null,
     });
     await context.SaveChangesAsync();
 }

@@ -273,7 +273,8 @@ public class PaymentExecuteEndpointTests : IntegrationTestBase
                 }
             },
             CreatedUTC = DateTime.UtcNow,
-            UpdatedUTC = DateTime.UtcNow
+            UpdatedUTC = DateTime.UtcNow,
+            GameOwnerPlayerID = null
         };
     }
 }

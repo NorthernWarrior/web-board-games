@@ -6,7 +6,7 @@ import { FormsModule } from '@angular/forms';
   imports: [FormsModule],
   selector: 'app-monopoly-banker-game-ui-state-free-parking',
   templateUrl: './free-parking.component.html',
-  styleUrls: ['../../game-styles.scss', './free-parking.component.scss'],
+  styleUrls: ['../../../game-styles.scss', './free-parking.component.scss'],
 })
 export class MonopolyBankerGameUiStateFreeParkingComponent extends PaySendOrReceiveBaseComponent {
   constructor() {
