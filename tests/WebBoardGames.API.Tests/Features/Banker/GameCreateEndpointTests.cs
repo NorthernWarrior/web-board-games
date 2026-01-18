@@ -49,7 +49,7 @@ public class GameCreateEndpointTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task GameCreate_WithMoneyOnFreeParking_CreatesFreePartingPlayer()
+    public async Task GameCreate_WithMoneyOnFreeParking_CreatesFreeParkinPlayer()
     {
         var request = new GameCreateRequest(
             Label: _faker.Lorem.Sentence(3),
