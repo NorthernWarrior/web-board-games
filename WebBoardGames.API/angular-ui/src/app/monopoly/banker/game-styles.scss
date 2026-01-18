@@ -1,0 +1,123 @@
+.card {
+  --card-margin: 1.1em;
+  --card-padding: 10px;
+  --card-header-padding: 15px;
+  position: relative;
+  margin: var(--card-margin);
+  padding: var(--card-padding);
+  border: 1px solid black;
+  height: calc(100% - var(--card-margin) * 2 - var(--card-padding) * 2);
+
+  .card-header {
+    padding: var(--card-header-padding);
+    border: 2px solid black;
+
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    row-gap: 5px;
+    margin-bottom: 1em;
+  }
+
+  .card-header--green {
+    background-color: rgb(92, 175, 76);    
+  }
+  .card-header--purple {
+    background-color: rgb(145, 81, 148);
+  }
+  .card-header--orange {
+    background-color: rgb(255, 165, 0);
+  }
+
+  .card-title {
+    font-size: 0.9em;
+    font-weight: 900;
+    text-align: center;
+  }
+  .card-subtitle {
+    font-size: 1.2em;
+    font-weight: 900;
+    text-align: center;
+  }
+
+  .card-quick-actions {
+    margin: 1.5em 0.75em;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 2em;
+
+    &--disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+  }
+
+}
+
+.card-btn {
+  border-radius: 10px;
+  border-width: 1px;
+  width: 2em;
+  height: 2em;
+  font-size: 2em;
+
+  &--round {
+    border-radius: 50%;
+  }
+
+  &--text {
+    font-size: 1em;
+    width: 6em;
+    height: 2.5em;
+  }
+  &--red {
+    background-color: rgb(216, 103, 99);
+  }
+  &--green {
+    background-color: rgb(133, 196, 121);
+  }
+}
+
+.card-body-container {
+  max-width: 90%;
+  margin: 2em auto;
+
+  &-title {
+    text-align: center;
+    font-size: 1.2em;
+  }
+}
+
+.card-body-property-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: repeat(auto, auto);
+  grid-template-areas: 'name value';
+  row-gap: 0.5em;
+}
+
+.card-body-property-grid-label {
+  font-weight: 600;
+}
+.card-body-property-grid-value {
+  text-align: right;
+}
+
+.card-body-money-buttons {
+  margin-top: 1.5em;
+  width: 270px;
+  margin-left: auto;
+  margin-right: auto;
+
+  .card-btn {
+    margin: 3px;
+  }
+}
+
+.card-body-action-buttons {
+  margin-top: 1.5em;
+  display: flex;
+  justify-content: space-evenly;
+  gap: 1.5em;
+}

@@ -7,7 +7,7 @@ import { FormsModule } from '@angular/forms';
   imports: [DecimalPipe, FormsModule],
   selector: 'app-monopoly-banker-game-ui-state-pay-receive',
   templateUrl: './pay-receive.component.html',
-  styleUrls: ['../../game-styles.scss', './pay-receive.component.scss'],
+  styleUrls: ['../../../game-styles.scss', './pay-receive.component.scss'],
 })
 export class MonopolyBankerGameUiStatePayReceiveComponent extends PaySendOrReceiveBaseComponent {
   constructor() {

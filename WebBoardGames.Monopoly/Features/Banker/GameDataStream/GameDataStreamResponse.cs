@@ -15,7 +15,10 @@ public record GameDataStreamResponse(
     public record PlayerInfo(
         string ID,
         string Name,
-        int Balance
+        int Balance,
+        bool IsGameOwner,
+        bool IsBankrupt,
+        bool IsWinner
     );
     public record GameOptions(
         bool MoneyOnFreeParking,

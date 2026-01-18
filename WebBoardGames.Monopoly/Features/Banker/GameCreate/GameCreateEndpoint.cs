@@ -40,6 +40,7 @@ public class GameCreateEndpoint(BoardGamesDbContext _context) : Endpoint<GameCre
             Players = new(2),
             CreatedUTC = DateTime.UtcNow,
             UpdatedUTC = DateTime.UtcNow,
+            GameOwnerPlayerID = player.ID,
         };
         if (req.MoneyOnFreeParking)
         {

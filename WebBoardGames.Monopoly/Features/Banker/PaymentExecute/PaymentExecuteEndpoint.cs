@@ -40,13 +40,18 @@ public partial class PaymentExecuteEndpoint(BoardGamesDbContext _context, Monopo
           ? game.Players.FirstOrDefault((p) => p.ExternalID == req.TargetPlayerID)
           : null;
 
+        var amount = req.Amount;
         if (source is not null)
         {
-            source.Balance -= req.Amount;
+            if (amount > source.Balance)
+            {
+                amount = source.Balance;
+            }
+            source.Balance -= amount;
         }
         if (target is not null)
         {
-            target.Balance += req.Amount;
+            target.Balance += amount;
         }
 
         var onlyOnePlayerNotBancrupt = game.Players

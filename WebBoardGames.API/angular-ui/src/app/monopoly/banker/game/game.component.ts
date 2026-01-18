@@ -27,7 +27,7 @@ type UiState = 'default' | 'pay-send' | 'pay-receive' | 'passed-go' | 'free-park
     MonopolyBankerGameUiStateFreeParkingComponent,
   ],
   templateUrl: './game.component.html',
-  styleUrls: ['./game-styles.scss', './game.component.scss'],
+  styleUrls: ['../game-styles.scss', './game.component.scss'],
 })
 export class MonopolyBankerGameComponent {
   private readonly _api = inject(ApiService);
@@ -89,7 +89,10 @@ export class MonopolyBankerGameComponent {
   }
 
   canGameShare(): boolean {
-    return !!navigator.share && this.game()?.state === 'waiting-for-players';
+    if (!isPlatformBrowser(this._platformId)) {
+      return false;
+    }
+    return this.game()?.state === 'waiting-for-players';
   }
   onGameShare(): void {
     if (!this.canGameShare()) {
@@ -98,16 +101,30 @@ export class MonopolyBankerGameComponent {
     const l = window.location;
     const url = `${l.protocol}//${l.host}/monopoly/banker?game=${this._gameID}`;
     console.log('Sharing game link:', url);
-    navigator
-      .share({
-        title: 'Join my Monopoly Game!',
-        text: `Come join my Monopoly Game "${this.game()?.label}"`,
-        url: url,
-      })
-      .catch((error) => {
-        // Optionally handle errors here
-        console.error('Error sharing:', error);
-      });
+    if (!!navigator.share) {
+      navigator
+        .share({
+          title: 'Join my Monopoly Game!',
+          text: `Come join my Monopoly Game "${this.game()?.label}"`,
+          url: url,
+        })
+        .catch((error) => {
+          // Optionally handle errors here
+          console.error('Error sharing:', error);
+        });
+    } else if (navigator.clipboard) {
+      // copy to clipboard as fallback
+      navigator.clipboard.writeText(url).then(
+        () => {
+          console.log('Game link copied to clipboard:', url);
+        },
+        (err) => {
+          console.error('Could not copy text: ', err);
+        },
+      );
+    } else {
+      prompt('Copy this link to share the game:', url);
+    }
   }
 
   onExecutePayment(sourcePlayerID: string | null, targetPlayerID: string | null, amount: number) {

@@ -6,7 +6,7 @@ import { DecimalPipe } from '@angular/common';
   imports: [DecimalPipe],
   selector: 'app-monopoly-banker-game-ui-state-default',
   templateUrl: './default.component.html',
-  styleUrls: ['../../game-styles.scss', './default.component.scss'],
+  styleUrls: ['../../../game-styles.scss', './default.component.scss'],
 })
 export class MonopolyBankerGameUiStateDefaultComponent {
   public readonly parent$ = input.required<MonopolyBankerGameComponent>();

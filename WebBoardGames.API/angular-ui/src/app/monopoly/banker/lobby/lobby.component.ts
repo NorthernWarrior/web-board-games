@@ -5,17 +5,30 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ApiService, GameCreateRequest, GameJoinRequest } from '../../../api/api-service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { NgTemplateOutlet } from '@angular/common';
+import { environment } from '../../../../environments/environment';
 
 @Component({
-  imports: [ReactiveFormsModule, MatButtonModule, MatInputModule, MatSlideToggleModule],
+  imports: [
+    ReactiveFormsModule,
+    NgTemplateOutlet,
+    MatButtonModule,
+    MatInputModule,
+    MatSlideToggleModule,
+  ],
   templateUrl: './lobby.component.html',
+  styleUrls: ['../game-styles.scss', './lobby.component.scss'],
 })
 export class MonopolyBankerLobbyComponent {
-  readonly formJoin: FormGroup;
-  readonly formCreate: FormGroup;
   private readonly _api = inject(ApiService);
   private readonly _router = inject(Router);
   private readonly _route = inject(ActivatedRoute);
+
+  readonly formJoin: FormGroup;
+  readonly formCreate: FormGroup;
+
+  readonly year = new Date().getFullYear();
+  readonly version = environment.version;
 
   constructor(fb: FormBuilder, route: ActivatedRoute) {
     this.formJoin = fb.group<GameJoinRequest>({
@@ -56,7 +69,7 @@ export class MonopolyBankerLobbyComponent {
           this.formJoin.controls['gameID'].setErrors({ notExists: true });
         } else {
           console.log(`Game with ID: ${gameID} is already in progress.`);
-            this.formJoin.controls['gameID'].setErrors({ alreadyInProgress: true });
+          this.formJoin.controls['gameID'].setErrors({ alreadyInProgress: true });
         }
       },
       error: (err) => {
@@ -85,6 +98,9 @@ export class MonopolyBankerLobbyComponent {
 
   onNavigateToGame(gameID: string, playerID: string): void {
     console.log(`Navigating to game with ID: ${gameID} and player ID: ${playerID}`);
-    this._router.navigate([`${gameID}`], { relativeTo: this._route, queryParams: { player: playerID } });
+    this._router.navigate([`${gameID}`], {
+      relativeTo: this._route,
+      queryParams: { player: playerID },
+    });
   }
 }

@@ -23,6 +23,9 @@ export interface PlayerInfo {
   id: string;
   name: string;
   balance: number;
+  isGameOwner: boolean;
+  isBankcrupt: boolean;
+  isWinner: boolean;
 }
 
 export interface GameDataResponse {
