@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\WebBoardGames.Application\WebBoardGames.Application.csproj" />
+    <ProjectReference Include="..\..\WebBoardGames.Application\WebBoardGames.Application.csproj" />
   </ItemGroup>
 
 </Project>
