@@ -30,7 +30,7 @@ public class GameCreateEndpointTests : IntegrationTestBase
             s.StatusCodeShouldBe(200);
         });
 
-        var response = result.ReadAsJson<GameCreateResponse>();
+        var response = await result.ReadAsJsonAsync<GameCreateResponse>();
         response.ShouldNotBeNull();
         response.GameID.ShouldNotBeNullOrEmpty();
         response.PlayerID.ShouldNotBeNullOrEmpty();
@@ -64,7 +64,7 @@ public class GameCreateEndpointTests : IntegrationTestBase
             s.StatusCodeShouldBe(200);
         });
 
-        var response = result.ReadAsJson<GameCreateResponse>();
+        var response = await result.ReadAsJsonAsync<GameCreateResponse>();
         var context = GetDbContext();
         var game = await context.MonopolyBankerGames
             .FirstOrDefaultAsync(g => g.ExternalID == response!.GameID);
@@ -125,7 +125,7 @@ public class GameCreateEndpointTests : IntegrationTestBase
             s.StatusCodeShouldBe(200);
         });
 
-        var response = result.ReadAsJson<GameCreateResponse>();
+        var response = await result.ReadAsJsonAsync<GameCreateResponse>();
         var context = GetDbContext();
         var game = await context.MonopolyBankerGames
             .FirstOrDefaultAsync(g => g.ExternalID == response!.GameID);
@@ -154,7 +154,7 @@ public class GameCreateEndpointTests : IntegrationTestBase
             s.StatusCodeShouldBe(200);
         });
 
-        var response = result.ReadAsJson<GameCreateResponse>();
+        var response = await result.ReadAsJsonAsync<GameCreateResponse>();
         var context = GetDbContext();
         var game = await context.MonopolyBankerGames
             .FirstOrDefaultAsync(g => g.ExternalID == response!.GameID);

@@ -33,7 +33,7 @@ public class GameJoinEndpointTests : IntegrationTestBase
             s.StatusCodeShouldBe(200);
         });
 
-        var response = result.ReadAsJson<GameJoinResponse>();
+        var response = await result.ReadAsJsonAsync<GameJoinResponse>();
         response.ShouldNotBeNull();
         response.Exists.ShouldBeTrue();
         response.AlreadyInProgress.ShouldBeFalse();
@@ -62,7 +62,7 @@ public class GameJoinEndpointTests : IntegrationTestBase
             s.StatusCodeShouldBe(200);
         });
 
-        var response = result.ReadAsJson<GameJoinResponse>();
+        var response = await result.ReadAsJsonAsync<GameJoinResponse>();
         response.ShouldNotBeNull();
         response.PlayerID.ShouldNotBeNullOrEmpty();
 
@@ -96,7 +96,7 @@ public class GameJoinEndpointTests : IntegrationTestBase
             s.StatusCodeShouldBe(200);
         });
 
-        var response = result.ReadAsJson<GameJoinResponse>();
+        var response = await result.ReadAsJsonAsync<GameJoinResponse>();
         var updatedGame = await context.MonopolyBankerGames
             .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID);
         updatedGame!.Players.Count.ShouldBe(3);
@@ -114,7 +114,7 @@ public class GameJoinEndpointTests : IntegrationTestBase
             s.StatusCodeShouldBe(200);
         });
 
-        var response = result.ReadAsJson<GameJoinResponse>();
+        var response = await result.ReadAsJsonAsync<GameJoinResponse>();
         response.ShouldNotBeNull();
         response.Exists.ShouldBeFalse();
         response.AlreadyInProgress.ShouldBeFalse();
@@ -138,7 +138,7 @@ public class GameJoinEndpointTests : IntegrationTestBase
             s.StatusCodeShouldBe(200);
         });
 
-        var response = result.ReadAsJson<GameJoinResponse>();
+        var response = await result.ReadAsJsonAsync<GameJoinResponse>();
         response.ShouldNotBeNull();
         response.Exists.ShouldBeTrue();
         response.AlreadyInProgress.ShouldBeTrue();
@@ -178,7 +178,7 @@ public class GameJoinEndpointTests : IntegrationTestBase
             s.StatusCodeShouldBe(200);
         });
 
-        var response = result.ReadAsJson<GameJoinResponse>();
+        var response = await result.ReadAsJsonAsync<GameJoinResponse>();
         var updatedGame = await context.MonopolyBankerGames
             .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID);
         updatedGame!.Players.Any(p => p.Name == "TestPlayer (1)").ShouldBeTrue();

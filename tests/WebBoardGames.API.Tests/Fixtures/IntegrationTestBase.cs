@@ -4,7 +4,8 @@ using WebBoardGames.Persistence;
 
 namespace WebBoardGames.API.Tests.Fixtures;
 
-public abstract class IntegrationTestBase : IClassFixture<WebApplicationFixture>, IAsyncLifetime
+[Collection(nameof(WebApplicationFixtureCollection))]
+public abstract class IntegrationTestBase : IAsyncLifetime
 {
     protected readonly WebApplicationFixture Fixture;
     protected IAlbaHost Host { get; private set; } = null!;
@@ -15,13 +16,13 @@ public abstract class IntegrationTestBase : IClassFixture<WebApplicationFixture>
         Fixture = fixture;
     }
 
-    public virtual async Task InitializeAsync()
+    public virtual async ValueTask InitializeAsync()
     {
         Host = await Fixture.GetSharedHost();
         ServiceScope = Host.Services.CreateScope();
     }
 
-    public virtual async Task DisposeAsync()
+    public virtual ValueTask DisposeAsync()
     {
         if (ServiceScope != null)
         {
@@ -29,6 +30,7 @@ public abstract class IntegrationTestBase : IClassFixture<WebApplicationFixture>
             ServiceScope.Dispose();
             ServiceScope = null;
         }
+        return ValueTask.CompletedTask;
     }
 
     protected BoardGamesDbContext GetDbContext()

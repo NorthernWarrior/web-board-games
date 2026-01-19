@@ -17,7 +17,7 @@ public class WebApplicationFixture : IAsyncLifetime
     
     public string MongoConnectionString { get; private set; } = string.Empty;
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         _mongoContainer = new MongoDbBuilder()
             .WithImage("mongo:8")
@@ -56,7 +56,7 @@ public class WebApplicationFixture : IAsyncLifetime
         return _sharedHost;
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (_sharedHost != null)
         {
