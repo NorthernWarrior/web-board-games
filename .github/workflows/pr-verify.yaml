@@ -69,6 +69,13 @@ jobs:
       - name: Build the backend
         run: dotnet build web-board-games.slnx --configuration Release
 
+      - name: Debug Info
+        run: |
+          whoami
+          id
+          groups
+          docker ps
+
       - name: Test the Services with Coverage
         run: dotnet test web-board-games.slnx --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory ./TestResults
 

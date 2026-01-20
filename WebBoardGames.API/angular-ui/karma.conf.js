@@ -34,10 +34,9 @@ module.exports = function (config) {
       ]
     },
     reporters: ['progress', 'kjhtml'],
-    browsers: ['ChromeHeadless'],
     restartOnFileChange: true,
     customLaunchers: {
-      ChromeHeadlessCI: {
+      HeadlessChrome: {
         base: 'ChromeHeadless',
         flags: [
           '--no-sandbox',
@@ -47,6 +46,7 @@ module.exports = function (config) {
           '--disable-extensions'
         ]
       }
-    }
+    },    
+    browsers: ['ChromeHeadless'],
   });
 };
