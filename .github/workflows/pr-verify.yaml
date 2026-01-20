@@ -69,30 +69,9 @@ jobs:
       - name: Build the backend
         run: dotnet build web-board-games.slnx --configuration Release
 
-      - name: Debug Info
-        run: |
-          whoami
-          id
-          groups
-          docker ps
-
       - name: Test the Services with Coverage
         run: dotnet test web-board-games.slnx --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory ./TestResults
 
-      - name: Convert coverage to Cobertura
-        run: |
-          dotnet tool install --global dotnet-reportgenerator-globaltool
-          reportgenerator -reports:TestResults/**/coverage.cobertura.xml -targetdir:TestResults/CoverageReport -reporttypes:Html
-        env:
-          PATH: ${{ env.PATH }}:/home/runner/.dotnet/tools
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: backend-coverage-report
-          path: TestResults/CoverageReport/
-          retention-days: 7
 
   angular-verify:
     name: Verify Angular
@@ -112,8 +91,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '${{ env.NODE_VERSION }}'
-          # cache: "npm"
-          # cache-dependency-path: WebBoardGames.API/angular-ui/package-lock.json
+          cache: "npm"
+          cache-dependency-path: WebBoardGames.API/angular-ui/package-lock.json
 
       - name: Install dependencies
         run: |
