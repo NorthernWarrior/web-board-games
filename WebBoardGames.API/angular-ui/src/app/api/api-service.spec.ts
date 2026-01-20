@@ -6,6 +6,7 @@ import { ApiService, GameCreateRequest, GameJoinRequest, specialPlayerID_Bank, s
 describe('ApiService', () => {
   let service: ApiService;
   let httpMock: HttpTestingController;
+  const mockPaymentResponse = { exists: true, alreadyInProgress: false, playerID: null };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -90,7 +91,7 @@ describe('ApiService', () => {
       targetPlayerID,
       amount
     });
-    req.flush({ exists: true, alreadyInProgress: false, playerID: null });
+    req.flush(mockPaymentResponse);
   });
 
   it('should execute payment with null source (bank payment)', () => {
@@ -109,7 +110,7 @@ describe('ApiService', () => {
       targetPlayerID,
       amount
     });
-    req.flush({ exists: true, alreadyInProgress: false, playerID: null });
+    req.flush(mockPaymentResponse);
   });
 
   it('should execute payment with null target (payment to bank)', () => {
@@ -128,7 +129,7 @@ describe('ApiService', () => {
       targetPlayerID,
       amount
     });
-    req.flush({ exists: true, alreadyInProgress: false, playerID: null });
+    req.flush(mockPaymentResponse);
   });
 
   it('should create observable for getGameData', (done) => {
