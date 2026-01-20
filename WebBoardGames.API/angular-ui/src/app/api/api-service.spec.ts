@@ -73,4 +73,88 @@ describe('ApiService', () => {
     expect(req.request.body).toEqual(mockRequest);
     req.flush(mockResponse);
   });
+
+  it('should execute payment', () => {
+    const gameID = 'game123';
+    const sourcePlayerID = 'player1';
+    const targetPlayerID = 'player2';
+    const amount = 500;
+
+    service.paymentExecute(gameID, sourcePlayerID, targetPlayerID, amount);
+
+    const req = httpMock.expectOne('/api/monopoly/banker/payment');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      gameID,
+      sourcePlayerID,
+      targetPlayerID,
+      amount
+    });
+    req.flush({ exists: true, alreadyInProgress: false, playerID: null });
+  });
+
+  it('should execute payment with null source (bank payment)', () => {
+    const gameID = 'game123';
+    const sourcePlayerID = null;
+    const targetPlayerID = 'player2';
+    const amount = 200;
+
+    service.paymentExecute(gameID, sourcePlayerID, targetPlayerID, amount);
+
+    const req = httpMock.expectOne('/api/monopoly/banker/payment');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      gameID,
+      sourcePlayerID,
+      targetPlayerID,
+      amount
+    });
+    req.flush({ exists: true, alreadyInProgress: false, playerID: null });
+  });
+
+  it('should execute payment with null target (payment to bank)', () => {
+    const gameID = 'game123';
+    const sourcePlayerID = 'player1';
+    const targetPlayerID = null;
+    const amount = 150;
+
+    service.paymentExecute(gameID, sourcePlayerID, targetPlayerID, amount);
+
+    const req = httpMock.expectOne('/api/monopoly/banker/payment');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      gameID,
+      sourcePlayerID,
+      targetPlayerID,
+      amount
+    });
+    req.flush({ exists: true, alreadyInProgress: false, playerID: null });
+  });
+
+  it('should create observable for getGameData', (done) => {
+    // Test that getGameData returns an observable
+    // Note: EventSource behavior is difficult to test in unit tests
+    // This test verifies the observable is created and can be subscribed to
+    const observable = service.getGameData('game123', 'player123');
+    expect(observable).toBeDefined();
+    
+    // Subscribe and expect it will error (due to EventSource 404 in test environment)
+    const subscription = observable.subscribe({
+      next: () => {
+        // If we receive data, that's also valid
+        subscription.unsubscribe();
+        done();
+      },
+      error: () => {
+        // EventSource will error in test environment, which is expected
+        done();
+      }
+    });
+    
+    // Clean up after a short delay if neither happens
+    setTimeout(() => {
+      subscription.unsubscribe();
+      done();
+    }, 100);
+  });
 });
