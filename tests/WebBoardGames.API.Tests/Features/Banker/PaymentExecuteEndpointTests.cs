@@ -8,13 +8,9 @@ using WebBoardGames.Persistence.Entities.Monopoly.Banker;
 
 namespace WebBoardGames.API.Tests.Features.Banker;
 
-public class PaymentExecuteEndpointTests : IntegrationTestBase
+public class PaymentExecuteEndpointTests(WebApplicationFixture fixture) : IntegrationTestBase(fixture)
 {
     private readonly Faker _faker = new();
-
-    public PaymentExecuteEndpointTests(WebApplicationFixture fixture) : base(fixture)
-    {
-    }
 
     [Fact]
     public async Task PaymentExecute_TransferBetweenPlayers_UpdatesBalancesCorrectly()
@@ -22,7 +18,7 @@ public class PaymentExecuteEndpointTests : IntegrationTestBase
         var context = GetDbContext();
         var game = CreateTestGameWithMultiplePlayers();
         context.MonopolyBankerGames.Add(game);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var sourcePlayer = game.Players[0];
         var targetPlayer = game.Players[1];
@@ -38,16 +34,16 @@ public class PaymentExecuteEndpointTests : IntegrationTestBase
         await Host.Scenario(s =>
         {
             s.Post.Json(request).ToUrl("/api/monopoly/banker/payment");
-            s.StatusCodeShouldBe(200);
+            s.StatusCodeShouldBe(204);
         });
 
-        var updatedGame = await context.MonopolyBankerGames
-            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID);
+        var updatedGame = await GetDbContext(forAssert: true).MonopolyBankerGames
+            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID, TestContext.Current.CancellationToken);
         updatedGame.ShouldNotBeNull();
-        
+
         var updatedSource = updatedGame.Players.First(p => p.ExternalID == sourcePlayer.ExternalID);
         var updatedTarget = updatedGame.Players.First(p => p.ExternalID == targetPlayer.ExternalID);
-        
+
         updatedSource.Balance.ShouldBe(sourcePlayer.Balance - amount);
         updatedTarget.Balance.ShouldBe(targetPlayer.Balance + amount);
     }
@@ -58,7 +54,7 @@ public class PaymentExecuteEndpointTests : IntegrationTestBase
         var context = GetDbContext();
         var game = CreateTestGameWithMultiplePlayers();
         context.MonopolyBankerGames.Add(game);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var sourcePlayer = game.Players[0];
         var amount = 100;
@@ -73,11 +69,11 @@ public class PaymentExecuteEndpointTests : IntegrationTestBase
         await Host.Scenario(s =>
         {
             s.Post.Json(request).ToUrl("/api/monopoly/banker/payment");
-            s.StatusCodeShouldBe(200);
+            s.StatusCodeShouldBe(204);
         });
 
-        var updatedGame = await context.MonopolyBankerGames
-            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID);
+        var updatedGame = await GetDbContext(forAssert: true).MonopolyBankerGames
+            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID, TestContext.Current.CancellationToken);
         var updatedSource = updatedGame!.Players.First(p => p.ExternalID == sourcePlayer.ExternalID);
         updatedSource.Balance.ShouldBe(sourcePlayer.Balance - amount);
     }
@@ -88,7 +84,7 @@ public class PaymentExecuteEndpointTests : IntegrationTestBase
         var context = GetDbContext();
         var game = CreateTestGameWithMultiplePlayers();
         context.MonopolyBankerGames.Add(game);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var targetPlayer = game.Players[0];
         var amount = 200;
@@ -103,11 +99,11 @@ public class PaymentExecuteEndpointTests : IntegrationTestBase
         await Host.Scenario(s =>
         {
             s.Post.Json(request).ToUrl("/api/monopoly/banker/payment");
-            s.StatusCodeShouldBe(200);
+            s.StatusCodeShouldBe(204);
         });
 
-        var updatedGame = await context.MonopolyBankerGames
-            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID);
+        var updatedGame = await GetDbContext(forAssert: true).MonopolyBankerGames
+            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID, TestContext.Current.CancellationToken);
         var updatedTarget = updatedGame!.Players.First(p => p.ExternalID == targetPlayer.ExternalID);
         updatedTarget.Balance.ShouldBe(targetPlayer.Balance + amount);
     }
@@ -135,7 +131,7 @@ public class PaymentExecuteEndpointTests : IntegrationTestBase
         var context = GetDbContext();
         var game = CreateTestGameWithMultiplePlayers();
         context.MonopolyBankerGames.Add(game);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var request = new PaymentExecuteRequest(
             game.ExternalID,
@@ -152,6 +148,43 @@ public class PaymentExecuteEndpointTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task PaymentExecute_TransferMoreThanSourceBalance_TransfersOnlyAvailableAmount()
+    {
+        var context = GetDbContext();
+        var game = CreateTestGameWithMultiplePlayers();
+        var sourcePlayer = game.Players[0];
+        var targetPlayer = game.Players[1];
+        sourcePlayer.Balance = 200;
+        targetPlayer.Balance = 1000;
+        context.MonopolyBankerGames.Add(game);
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        var request = new PaymentExecuteRequest(
+            game.ExternalID,
+            sourcePlayer.ExternalID,
+            targetPlayer.ExternalID,
+            500 // Attempt to transfer more than available
+        );
+
+        await Host.Scenario(s =>
+        {
+            s.Post.Json(request).ToUrl("/api/monopoly/banker/payment");
+            s.StatusCodeShouldBe(204);
+        });
+
+        var updatedGame = await GetDbContext(forAssert: true).MonopolyBankerGames
+            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID, TestContext.Current.CancellationToken);
+        updatedGame.ShouldNotBeNull();
+
+        var updatedSource = updatedGame.Players.First(p => p.ExternalID == sourcePlayer.ExternalID);
+        var updatedTarget = updatedGame.Players.First(p => p.ExternalID == targetPlayer.ExternalID);
+
+        updatedSource.Balance.ShouldBe(0);
+        updatedTarget.Balance.ShouldBe(1200);
+    }
+
+
+    [Fact]
     public async Task PaymentExecute_WhenOnlyOnePlayerSolvent_CompletesGame()
     {
         var context = GetDbContext();
@@ -159,7 +192,7 @@ public class PaymentExecuteEndpointTests : IntegrationTestBase
         game.Players[0].Balance = 100;
         game.Players[1].Balance = 0;
         context.MonopolyBankerGames.Add(game);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var request = new PaymentExecuteRequest(
             game.ExternalID,
@@ -171,11 +204,11 @@ public class PaymentExecuteEndpointTests : IntegrationTestBase
         await Host.Scenario(s =>
         {
             s.Post.Json(request).ToUrl("/api/monopoly/banker/payment");
-            s.StatusCodeShouldBe(200);
+            s.StatusCodeShouldBe(204);
         });
 
-        var updatedGame = await context.MonopolyBankerGames
-            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID);
+        var updatedGame = await GetDbContext(forAssert: true).MonopolyBankerGames
+            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID, TestContext.Current.CancellationToken);
         updatedGame!.State.ShouldBe(MonopolyBankerGameState.Completed);
     }
 
@@ -187,7 +220,7 @@ public class PaymentExecuteEndpointTests : IntegrationTestBase
         game.State = MonopolyBankerGameState.Completed;
         var originalBalance = game.Players[0].Balance;
         context.MonopolyBankerGames.Add(game);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var request = new PaymentExecuteRequest(
             game.ExternalID,
@@ -199,11 +232,11 @@ public class PaymentExecuteEndpointTests : IntegrationTestBase
         await Host.Scenario(s =>
         {
             s.Post.Json(request).ToUrl("/api/monopoly/banker/payment");
-            s.StatusCodeShouldBe(200);
+            s.StatusCodeShouldBe(204);
         });
 
         var updatedGame = await context.MonopolyBankerGames
-            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID);
+            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID, TestContext.Current.CancellationToken);
         updatedGame!.Players[0].Balance.ShouldBe(originalBalance);
     }
 
@@ -222,7 +255,7 @@ public class PaymentExecuteEndpointTests : IntegrationTestBase
         game.Players[0].Balance = 100;
         game.Players[1].Balance = 0;
         context.MonopolyBankerGames.Add(game);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var request = new PaymentExecuteRequest(
             game.ExternalID,
@@ -234,11 +267,11 @@ public class PaymentExecuteEndpointTests : IntegrationTestBase
         await Host.Scenario(s =>
         {
             s.Post.Json(request).ToUrl("/api/monopoly/banker/payment");
-            s.StatusCodeShouldBe(200);
+            s.StatusCodeShouldBe(204);
         });
 
-        var updatedGame = await context.MonopolyBankerGames
-            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID);
+        var updatedGame = await GetDbContext(forAssert: true).MonopolyBankerGames
+            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID, TestContext.Current.CancellationToken);
         updatedGame!.State.ShouldBe(MonopolyBankerGameState.Completed);
     }
 
@@ -255,8 +288,8 @@ public class PaymentExecuteEndpointTests : IntegrationTestBase
                 DoubleMoneyOnGo = false,
                 MoneyOnFreeParking = false
             },
-            Players = new List<Player>
-            {
+            Players =
+            [
                 new()
                 {
                     ID = ObjectId.GenerateNewId(),
@@ -271,7 +304,7 @@ public class PaymentExecuteEndpointTests : IntegrationTestBase
                     Name = _faker.Name.FirstName(),
                     Balance = 1000
                 }
-            },
+            ],
             CreatedUTC = DateTime.UtcNow,
             UpdatedUTC = DateTime.UtcNow,
             GameOwnerPlayerID = null

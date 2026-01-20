@@ -8,13 +8,9 @@ using WebBoardGames.Persistence.Entities.Monopoly.Banker;
 
 namespace WebBoardGames.API.Tests.Features.Banker;
 
-public class GameJoinEndpointTests : IntegrationTestBase
+public class GameJoinEndpointTests(WebApplicationFixture fixture) : IntegrationTestBase(fixture)
 {
     private readonly Faker _faker = new();
-
-    public GameJoinEndpointTests(WebApplicationFixture fixture) : base(fixture)
-    {
-    }
 
     [Fact]
     public async Task GameJoin_WithValidGameAndUniqueName_AddsPlayerSuccessfully()
@@ -22,7 +18,7 @@ public class GameJoinEndpointTests : IntegrationTestBase
         var context = GetDbContext();
         var game = CreateTestGame();
         context.MonopolyBankerGames.Add(game);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var playerName = _faker.Name.FirstName();
         var request = new GameJoinRequest(game.ExternalID, playerName);
@@ -40,7 +36,7 @@ public class GameJoinEndpointTests : IntegrationTestBase
         response.PlayerID.ShouldNotBeNullOrEmpty();
 
         var updatedGame = await context.MonopolyBankerGames
-            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID);
+            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID, TestContext.Current.CancellationToken);
         updatedGame!.Players.Count.ShouldBe(2);
         updatedGame.Players.Any(p => p.Name == playerName).ShouldBeTrue();
     }
@@ -52,7 +48,7 @@ public class GameJoinEndpointTests : IntegrationTestBase
         var existingPlayerName = "John";
         var game = CreateTestGame(existingPlayerName);
         context.MonopolyBankerGames.Add(game);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var request = new GameJoinRequest(game.ExternalID, existingPlayerName);
 
@@ -67,7 +63,7 @@ public class GameJoinEndpointTests : IntegrationTestBase
         response.PlayerID.ShouldNotBeNullOrEmpty();
 
         var updatedGame = await context.MonopolyBankerGames
-            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID);
+            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID, TestContext.Current.CancellationToken);
         updatedGame!.Players.Count.ShouldBe(2);
         updatedGame.Players.Any(p => p.Name == "John (1)").ShouldBeTrue();
     }
@@ -86,19 +82,18 @@ public class GameJoinEndpointTests : IntegrationTestBase
             Balance = 1500
         });
         context.MonopolyBankerGames.Add(game);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var request = new GameJoinRequest(game.ExternalID, baseName);
 
-        var result = await Host.Scenario(s =>
+        await Host.Scenario(s =>
         {
             s.Post.Json(request).ToUrl("/api/monopoly/banker/join");
             s.StatusCodeShouldBe(200);
         });
 
-        var response = await result.ReadAsJsonAsync<GameJoinResponse>();
         var updatedGame = await context.MonopolyBankerGames
-            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID);
+            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID, cancellationToken: TestContext.Current.CancellationToken);
         updatedGame!.Players.Count.ShouldBe(3);
         updatedGame.Players.Any(p => p.Name == "Alice (2)").ShouldBeTrue();
     }
@@ -128,7 +123,7 @@ public class GameJoinEndpointTests : IntegrationTestBase
         var game = CreateTestGame();
         game.State = MonopolyBankerGameState.InProgress;
         context.MonopolyBankerGames.Add(game);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var request = new GameJoinRequest(game.ExternalID, _faker.Name.FirstName());
 
@@ -151,7 +146,7 @@ public class GameJoinEndpointTests : IntegrationTestBase
         var context = GetDbContext();
         var game = CreateTestGame();
         context.MonopolyBankerGames.Add(game);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var request = new GameJoinRequest(game.ExternalID, "");
 
@@ -168,19 +163,18 @@ public class GameJoinEndpointTests : IntegrationTestBase
         var context = GetDbContext();
         var game = CreateTestGame("TestPlayer");
         context.MonopolyBankerGames.Add(game);
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var request = new GameJoinRequest(game.ExternalID, "  TestPlayer  ");
 
-        var result = await Host.Scenario(s =>
+        await Host.Scenario(s =>
         {
             s.Post.Json(request).ToUrl("/api/monopoly/banker/join");
             s.StatusCodeShouldBe(200);
         });
 
-        var response = await result.ReadAsJsonAsync<GameJoinResponse>();
         var updatedGame = await context.MonopolyBankerGames
-            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID);
+            .FirstOrDefaultAsync(g => g.ExternalID == game.ExternalID, TestContext.Current.CancellationToken);
         updatedGame!.Players.Any(p => p.Name == "TestPlayer (1)").ShouldBeTrue();
     }
 
@@ -197,8 +191,8 @@ public class GameJoinEndpointTests : IntegrationTestBase
                 DoubleMoneyOnGo = false,
                 MoneyOnFreeParking = false
             },
-            Players = new List<Player>
-            {
+            Players =
+            [
                 new()
                 {
                     ID = ObjectId.GenerateNewId(),
@@ -206,7 +200,7 @@ public class GameJoinEndpointTests : IntegrationTestBase
                     Name = initialPlayerName ?? _faker.Name.FirstName(),
                     Balance = 1500
                 }
-            },
+            ],
             CreatedUTC = DateTime.UtcNow,
             UpdatedUTC = DateTime.UtcNow,
             GameOwnerPlayerID = null

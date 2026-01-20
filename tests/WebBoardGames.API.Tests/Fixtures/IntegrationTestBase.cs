@@ -1,5 +1,4 @@
 using Alba;
-using Microsoft.Extensions.DependencyInjection;
 using WebBoardGames.Persistence;
 
 namespace WebBoardGames.API.Tests.Fixtures;
@@ -10,6 +9,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
     protected readonly WebApplicationFixture Fixture;
     protected IAlbaHost Host { get; private set; } = null!;
     protected IServiceScope? ServiceScope { get; private set; }
+    protected IServiceScope? AssertScope { get; private set; }
 
     protected IntegrationTestBase(WebApplicationFixture fixture)
     {
@@ -20,30 +20,35 @@ public abstract class IntegrationTestBase : IAsyncLifetime
     {
         Host = await Fixture.GetSharedHost();
         ServiceScope = Host.Services.CreateScope();
+        AssertScope = Host.Services.CreateScope();
     }
 
     public virtual ValueTask DisposeAsync()
     {
-        if (ServiceScope != null)
-        {
-            // Skip cleanup - let fixture handle container disposal
-            ServiceScope.Dispose();
-            ServiceScope = null;
-        }
+        // Skip cleanup - let fixture handle container disposal
+        ServiceScope?.Dispose();
+        ServiceScope = null;
+        AssertScope?.Dispose();
+        AssertScope = null;
         return ValueTask.CompletedTask;
     }
 
-    protected BoardGamesDbContext GetDbContext()
+    protected BoardGamesDbContext GetDbContext(bool forAssert = false)
     {
+        if (AssertScope == null)
+            throw new InvalidOperationException("AssertScope is not initialized");
         if (ServiceScope == null)
             throw new InvalidOperationException("ServiceScope is not initialized");
-            
-        return ServiceScope.ServiceProvider.GetRequiredService<BoardGamesDbContext>();
+
+        var scope = forAssert ? AssertScope : ServiceScope;
+        return scope.ServiceProvider.GetRequiredService<BoardGamesDbContext>();
     }
 
     private async Task CleanupDatabase()
     {
         if (ServiceScope == null)
+            return;
+        if (AssertScope == null)
             return;
 
         try

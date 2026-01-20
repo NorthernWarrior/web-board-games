@@ -1,33 +1,24 @@
 using Alba;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Testcontainers.MongoDb;
-using DotNet.Testcontainers.Builders;
 using WebBoardGames.Persistence;
 
 namespace WebBoardGames.API.Tests.Fixtures;
 
 public class WebApplicationFixture : IAsyncLifetime
 {
-    private MongoDbContainer? _mongoContainer;
+    private readonly MongoDbContainer _mongoContainer = new MongoDbBuilder("mongo:8")
+            .Build();
+
     private IAlbaHost? _sharedHost;
-    
+
     public string MongoConnectionString { get; private set; } = string.Empty;
 
     public async ValueTask InitializeAsync()
     {
-        _mongoContainer = new MongoDbBuilder()
-            .WithImage("mongo:8")
-            .Build();
-
         await _mongoContainer.StartAsync();
         MongoConnectionString = _mongoContainer.GetConnectionString();
-        
-        // Give MongoDB a moment to fully initialize
-        await Task.Delay(3000);
     }
 
     public async Task<IAlbaHost> CreateHost()
@@ -42,6 +33,15 @@ public class WebApplicationFixture : IAsyncLifetime
                     ["ConnectionStrings:MongoDb"] = MongoConnectionString
                 });
             });
+            builder.ConfigureServices(services =>
+            {
+                services.RemoveAll<DbContextOptions<BoardGamesDbContext>>();
+                services.RemoveAll<BoardGamesDbContext>();
+                services.AddDbContext<BoardGamesDbContext>(x => x
+                    .EnableSensitiveDataLogging(true)
+                    .UseMongoDB(MongoConnectionString, "web-board-games")
+                );
+            });
         });
 
         return host;
@@ -49,20 +49,18 @@ public class WebApplicationFixture : IAsyncLifetime
 
     public async Task<IAlbaHost> GetSharedHost()
     {
-        if (_sharedHost == null)
-        {
-            _sharedHost = await CreateHost();
-        }
+        _sharedHost ??= await CreateHost();
         return _sharedHost;
     }
 
     public async ValueTask DisposeAsync()
     {
+        GC.SuppressFinalize(this);
         if (_sharedHost != null)
         {
             await _sharedHost.DisposeAsync();
         }
-        
+
         if (_mongoContainer != null)
         {
             await _mongoContainer.DisposeAsync();

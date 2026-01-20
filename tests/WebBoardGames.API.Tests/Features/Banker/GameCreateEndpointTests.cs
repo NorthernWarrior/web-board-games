@@ -6,13 +6,9 @@ using WebBoardGames.Monopoly.Features.Banker.GameCreate;
 
 namespace WebBoardGames.API.Tests.Features.Banker;
 
-public class GameCreateEndpointTests : IntegrationTestBase
+public class GameCreateEndpointTests(WebApplicationFixture fixture) : IntegrationTestBase(fixture)
 {
     private readonly Faker _faker = new();
-
-    public GameCreateEndpointTests(WebApplicationFixture fixture) : base(fixture)
-    {
-    }
 
     [Fact]
     public async Task GameCreate_WithValidRequest_CreatesGameSuccessfully()
@@ -37,8 +33,8 @@ public class GameCreateEndpointTests : IntegrationTestBase
 
         var context = GetDbContext();
         var game = await context.MonopolyBankerGames
-            .FirstOrDefaultAsync(g => g.ExternalID == response.GameID);
-        
+            .FirstOrDefaultAsync(g => g.ExternalID == response.GameID, TestContext.Current.CancellationToken);
+
         game.ShouldNotBeNull();
         game.Label.ShouldBe(request.Label);
         game.Players.Count.ShouldBe(1);
@@ -67,8 +63,8 @@ public class GameCreateEndpointTests : IntegrationTestBase
         var response = await result.ReadAsJsonAsync<GameCreateResponse>();
         var context = GetDbContext();
         var game = await context.MonopolyBankerGames
-            .FirstOrDefaultAsync(g => g.ExternalID == response!.GameID);
-        
+            .FirstOrDefaultAsync(g => g.ExternalID == response!.GameID, TestContext.Current.CancellationToken);
+
         game.ShouldNotBeNull();
         game.Players.Count.ShouldBe(2);
         game.Players.Any(p => p.ExternalID == "free-parking").ShouldBeTrue();
@@ -128,8 +124,8 @@ public class GameCreateEndpointTests : IntegrationTestBase
         var response = await result.ReadAsJsonAsync<GameCreateResponse>();
         var context = GetDbContext();
         var game = await context.MonopolyBankerGames
-            .FirstOrDefaultAsync(g => g.ExternalID == response!.GameID);
-        
+            .FirstOrDefaultAsync(g => g.ExternalID == response!.GameID, TestContext.Current.CancellationToken);
+
         game.ShouldNotBeNull();
         game.Options.DoubleMoneyOnGo.ShouldBeTrue();
     }
@@ -157,8 +153,8 @@ public class GameCreateEndpointTests : IntegrationTestBase
         var response = await result.ReadAsJsonAsync<GameCreateResponse>();
         var context = GetDbContext();
         var game = await context.MonopolyBankerGames
-            .FirstOrDefaultAsync(g => g.ExternalID == response!.GameID);
-        
+            .FirstOrDefaultAsync(g => g.ExternalID == response!.GameID, TestContext.Current.CancellationToken);
+
         game.ShouldNotBeNull();
         game.Options.MoneyOnFreeParking.ShouldBe(moneyOnFreeParking);
         game.Options.DoubleMoneyOnGo.ShouldBe(doubleMoneyOnGo);

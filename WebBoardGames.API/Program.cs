@@ -118,9 +118,9 @@ if (!app.Environment.EnvironmentName.Equals("Test", StringComparison.OrdinalIgno
     await context.SaveChangesAsync();
 }
 #endif
-
+
+
 await app.RunAsync();
 
-// Make Program class visible to tests
-public partial class Program { }
+
 
