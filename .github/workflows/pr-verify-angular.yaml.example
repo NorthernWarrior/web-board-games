@@ -1,0 +1,49 @@
+name: Angular PR Verification
+
+# This is an example workflow for Gitea Actions
+# To use with GitHub Actions, rename this file to pr-verify-angular.yaml
+
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+    paths:
+      - 'WebBoardGames.API/angular-ui/**'
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: WebBoardGames.API/angular-ui
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: WebBoardGames.API/angular-ui/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build Angular project
+        run: npm run build
+      
+      - name: Run tests
+        run: npm run test:ci
+      
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: WebBoardGames.API/angular-ui/coverage/
+          retention-days: 7
