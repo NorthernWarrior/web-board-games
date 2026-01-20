@@ -112,11 +112,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '${{ env.NODE_VERSION }}'
-          cache: "npm"
-          cache-dependency-path: WebBoardGames.API/angular-ui/package-lock.json
+          # cache: "npm"
+          # cache-dependency-path: WebBoardGames.API/angular-ui/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
 
       - name: Build Angular project
         run: npm run build
