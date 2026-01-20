@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "WebBoardGames.API.Tests": {
+      "commandName": "Project"
+    }
+  }
+}

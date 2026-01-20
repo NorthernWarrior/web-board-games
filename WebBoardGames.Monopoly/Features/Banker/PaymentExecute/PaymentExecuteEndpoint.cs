@@ -54,10 +54,10 @@ public partial class PaymentExecuteEndpoint(BoardGamesDbContext _context, Monopo
             target.Balance += amount;
         }
 
-        var onlyOnePlayerNotBancrupt = game.Players
-            .Count(p => p.ExternalID != "free-parking" && p.Balance > 0) == 1;
+        var allPlayersOrOnlyOneNotBankrupt = game.Players
+            .Count(p => p.ExternalID != "free-parking" && p.Balance > 0) <= 1;
 
-        game.State = onlyOnePlayerNotBancrupt ? MonopolyBankerGameState.Completed : MonopolyBankerGameState.InProgress;
+        game.State = allPlayersOrOnlyOneNotBankrupt ? MonopolyBankerGameState.Completed : MonopolyBankerGameState.InProgress;
         game.UpdatedUTC = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(ct);

@@ -70,10 +70,20 @@ public static class MinimalApiAngular
 
     private static void UseAngularStaticFiles(WebApplication app, string angularDistPath)
     {
+        // Skip static files in Test environment or if path doesn't exist
+        var fullPath = Path.IsPathRooted(angularDistPath) 
+            ? angularDistPath 
+            : Path.Combine(app.Environment.ContentRootPath, angularDistPath);
+            
+        if (!Directory.Exists(fullPath))
+        {
+            return;
+        }
+        
         app.UseDefaultFiles();
         app.UseStaticFiles(new StaticFileOptions
         {
-            FileProvider = new PhysicalFileProvider(angularDistPath),
+            FileProvider = new PhysicalFileProvider(fullPath),
             RequestPath = ""
         });
 

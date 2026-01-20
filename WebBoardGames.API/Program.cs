@@ -45,7 +45,7 @@ builder.Services.AddOpenApi()
     .RegisterServicesFromMonopoly();
 builder.AddMinimalApiAngular($"http://{builder.Configuration["DOCKER_HOST"] ?? "localhost"}:4200");
 
-var mongoConnectionString = builder.Configuration.GetConnectionString("MongoDb")!;
+var mongoConnectionString = builder.Configuration.GetConnectionString("MongoDb") ?? "mongodb://localhost:27017";
 builder.Services.AddDbContext<BoardGamesDbContext>(x => x
     .EnableSensitiveDataLogging(builder.Environment.IsDevelopment())
     .UseMongoDB(mongoConnectionString, "web-board-games")
@@ -98,22 +98,29 @@ if (app.Environment.IsDevelopment())
 }
 
 #if DEBUG
-var context = app.Services.CreateScope().ServiceProvider.GetRequiredService<BoardGamesDbContext>();
-context.Database.AutoTransactionBehavior = AutoTransactionBehavior.Never;
-context.MonopolyBankerGames.RemoveRange(context.MonopolyBankerGames.Where(e => e.ExternalID == "1234"));
-context.MonopolyBankerGames.Add(new()
+if (!app.Environment.EnvironmentName.Equals("Test", StringComparison.OrdinalIgnoreCase))
 {
-    ID = MongoDB.Bson.ObjectId.GenerateNewId(),
-    ExternalID = "1234",
-    Label = "Test Game",
-    State = WebBoardGames.Persistence.Entities.Monopoly.Banker.MonopolyBankerGameState.WaitingForPlayers,
-    Players = [new() { ID = MongoDB.Bson.ObjectId.GenerateNewId(), ExternalID = "free-parking", Name = "Free Parking", Balance = 0 }],
-    Options = new() { DoubleMoneyOnGo = true, MoneyOnFreeParking = true },
-    CreatedUTC = DateTime.UtcNow,
-    UpdatedUTC = DateTime.UtcNow,
-    GameOwnerPlayerID = null,
-});
-await context.SaveChangesAsync();
+    var context = app.Services.CreateScope().ServiceProvider.GetRequiredService<BoardGamesDbContext>();
+    context.Database.AutoTransactionBehavior = AutoTransactionBehavior.Never;
+    context.MonopolyBankerGames.RemoveRange(context.MonopolyBankerGames.Where(e => e.ExternalID == "1234"));
+    context.MonopolyBankerGames.Add(new()
+    {
+        ID = MongoDB.Bson.ObjectId.GenerateNewId(),
+        ExternalID = "1234",
+        Label = "Test Game",
+        State = WebBoardGames.Persistence.Entities.Monopoly.Banker.MonopolyBankerGameState.WaitingForPlayers,
+        Players = [new() { ID = MongoDB.Bson.ObjectId.GenerateNewId(), ExternalID = "free-parking", Name = "Free Parking", Balance = 0 }],
+        Options = new() { DoubleMoneyOnGo = true, MoneyOnFreeParking = true },
+        CreatedUTC = DateTime.UtcNow,
+        UpdatedUTC = DateTime.UtcNow,
+        GameOwnerPlayerID = null,
+    });
+    await context.SaveChangesAsync();
+}
 #endif
 
+
 await app.RunAsync();
+
+
+

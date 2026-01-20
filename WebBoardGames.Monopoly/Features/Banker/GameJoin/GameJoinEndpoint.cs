@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Bson;
+using WebBoardGames.Application.Helpers;
 using WebBoardGames.Monopoly.Services;
 using WebBoardGames.Persistence;
 using WebBoardGames.Persistence.Entities.Monopoly.Banker;
@@ -36,7 +37,9 @@ public partial class GameJoinEndpoint(BoardGamesDbContext _context, MonopolyBank
             return;
         }
 
-        var playerName = _HandlePlayerNameDuplicates(game.Players, req.PlayerName);
+        var playerName = PlayerNameHelper.EnsureUniqueName(
+            game.Players.Select(p => p.Name),
+            req.PlayerName);
 
         var player = new Player()
         {
@@ -55,22 +58,5 @@ public partial class GameJoinEndpoint(BoardGamesDbContext _context, MonopolyBank
         _eventService.Publish(game);
 
         Response = new(true, false, player.ExternalID);
-    }
-
-    private static string _HandlePlayerNameDuplicates(List<Player> players, string playerName)
-    {
-        var finalPlayerName = playerName.Trim();
-
-        var foundDuplicate = false;
-        var idx = 0;
-        do
-        {
-            foundDuplicate = players.Any(x => x.Name == finalPlayerName);
-            if (!foundDuplicate) { break; }
-            finalPlayerName = $"{playerName} ({++idx})";
-
-        } while (foundDuplicate);
-
-        return finalPlayerName;
     }
 }
