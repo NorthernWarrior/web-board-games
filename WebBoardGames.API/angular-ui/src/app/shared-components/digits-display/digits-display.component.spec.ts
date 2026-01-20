@@ -28,12 +28,18 @@ describe('DigitsDisplayComponent', () => {
     fixture.componentRef.setInput('value', 123);
     fixture.detectChanges();
     expect(component.value()).toBe(123);
+    const digits = component.digits();
+    expect(digits.length).toBe(3);
+    expect(digits.map(d => d.value)).toEqual(['1', '2', '3']);
   });
 
   it('should display negative numbers correctly', () => {
     fixture.componentRef.setInput('value', -456);
     fixture.detectChanges();
     expect(component.value()).toBe(-456);
+    const digits = component.digits();
+    expect(digits.length).toBe(4);
+    expect(digits.map(d => d.value)).toEqual(['-', '4', '5', '6']);
   });
 
   it('should respect minDigits parameter', () => {
