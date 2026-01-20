@@ -23,3 +23,4 @@ public class Game
     public required DateTime UpdatedUTC { get; set; }
     public required ObjectId? GameOwnerPlayerID { get; set; }
 }
+

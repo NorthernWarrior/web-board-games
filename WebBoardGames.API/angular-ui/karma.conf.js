@@ -1,16 +1,16 @@
 // Karma configuration file, see link for more information
 // https://karma-runner.github.io/1.0/config/configuration-file.html
 
+
 module.exports = function (config) {
   config.set({
     basePath: '',
-    frameworks: ['jasmine', '@angular/build'],
+    frameworks: ['jasmine'],
     plugins: [
       require('karma-jasmine'),
       require('karma-chrome-launcher'),
       require('karma-jasmine-html-reporter'),
-      require('karma-coverage'),
-      require('@angular/build/plugins/karma')
+      require('karma-coverage')
     ],
     client: {
       jasmine: {
@@ -34,8 +34,8 @@ module.exports = function (config) {
       ]
     },
     reporters: ['progress', 'kjhtml'],
-    browsers: ['Chrome'],
     restartOnFileChange: true,
+    browsers: ['ChromeHeadless','ChromeHeadlessCI'],
     customLaunchers: {
       ChromeHeadlessCI: {
         base: 'ChromeHeadless',
@@ -47,6 +47,6 @@ module.exports = function (config) {
           '--disable-extensions'
         ]
       }
-    }
+    },    
   });
 };
