@@ -44,6 +44,41 @@ To execute unit tests with the [Karma](https://karma-runner.github.io) test runn
 ng test
 ```
 
+### Running tests in CI/Headless Mode
+
+For continuous integration or headless environments (without UI), use:
+
+```bash
+npm run test:ci
+```
+
+This command runs tests once in headless Chrome without watching for changes and generates code coverage reports in the `coverage/` directory.
+
+### Test Configuration
+
+- **karma.conf.js**: Main configuration file for Karma test runner
+- **Test files**: Files ending with `.spec.ts` contain unit tests
+- **Coverage**: Code coverage reports are generated in the `coverage/` directory when running `npm run test:ci`
+
+### Writing Tests
+
+Tests follow Jasmine syntax and use Angular Testing utilities. Example test structure:
+
+```typescript
+describe('ComponentName', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [ComponentName]
+    }).compileComponents();
+  });
+
+  it('should create', () => {
+    const fixture = TestBed.createComponent(ComponentName);
+    expect(fixture.componentInstance).toBeTruthy();
+  });
+});
+```
+
 ## Running end-to-end tests
 
 For end-to-end (e2e) testing, run:
