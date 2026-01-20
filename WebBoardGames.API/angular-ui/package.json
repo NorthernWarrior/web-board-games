@@ -1,6 +1,6 @@
 {
   "name": "angular-ui",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "scripts": {
     "ng": "ng",
     "set-version": "node set-version.js",

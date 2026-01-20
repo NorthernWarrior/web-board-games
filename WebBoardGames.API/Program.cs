@@ -121,6 +121,3 @@ if (!app.Environment.EnvironmentName.Equals("Test", StringComparison.OrdinalIgno
 
 
 await app.RunAsync();
-
-
-
