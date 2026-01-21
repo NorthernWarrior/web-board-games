@@ -139,23 +139,34 @@ describe('ApiService', () => {
     const observable = service.getGameData('game123', 'player123');
     expect(observable).toBeDefined();
     
+    let completed = false;
+    
     // Subscribe and expect it will error (due to EventSource 404 in test environment)
     const subscription = observable.subscribe({
       next: () => {
         // If we receive data, that's also valid
-        subscription.unsubscribe();
-        done();
+        if (!completed) {
+          completed = true;
+          subscription.unsubscribe();
+          done();
+        }
       },
       error: () => {
         // EventSource will error in test environment, which is expected
-        done();
+        if (!completed) {
+          completed = true;
+          done();
+        }
       }
     });
     
     // Clean up after a short delay if neither happens
     setTimeout(() => {
-      subscription.unsubscribe();
-      done();
+      if (!completed) {
+        completed = true;
+        subscription.unsubscribe();
+        done();
+      }
     }, 100);
   });
 
