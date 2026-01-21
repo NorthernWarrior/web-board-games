@@ -11,6 +11,8 @@ import { MonopolyBankerGameUiStatePassedGoComponent } from './ui-states/passed-g
 import { SharedComponentsModule } from '../../../shared-components/shared-components.module';
 import { MonopolyBankerGameUiStateFreeParkingComponent } from './ui-states/free-parking/free-parking.component';
 import { isPlatformBrowser } from '@angular/common';
+import { first, share } from 'rxjs';
+import { RecentGamesService } from '../services/recent-games.service';
 
 type UiState = 'default' | 'pay-send' | 'pay-receive' | 'passed-go' | 'free-parking';
 
@@ -33,6 +35,7 @@ export class MonopolyBankerGameComponent {
   private readonly _api = inject(ApiService);
   private readonly _router = inject(Router);
   private readonly _platformId = inject(PLATFORM_ID);
+  private readonly _recentGamesService = inject(RecentGamesService);
   private readonly _gameID: string;
   public readonly playerID = signal<string>('');
 
@@ -158,7 +161,27 @@ export class MonopolyBankerGameComponent {
 
   private _refreshGameData(): void {
     if (isPlatformBrowser(this._platformId)) {
-      this._api.getGameData(this._gameID, this.playerID()).subscribe({
+
+      // Use a shared observable to avoid duplicate API calls
+      const shared$ = this._api.getGameData(this._gameID, this.playerID()).pipe(share());
+
+      // First event: Write game into recent games
+      shared$.pipe(first()).subscribe({
+        next: (g) => {
+          if (!g || g.state === 'completed') {
+            return;
+          }
+          this._recentGamesService.addRecentGame({
+            gameID: g.id,
+            gameLabel: g.label,
+            playerID: g.player.id,
+            playerName: g.player.name,
+          });
+        },
+      });
+
+      // Every event: update game signal
+      shared$.subscribe({
         next: (data) => {
           this.game.set(data);
         },

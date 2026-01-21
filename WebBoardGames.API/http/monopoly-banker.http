@@ -21,6 +21,16 @@ Content-Type: application/json
 }
 ###
 
+# Games still active
+POST {{baseUrl}}/api/monopoly/banker/still-active
+Accept: application/json
+Content-Type: application/json
+
+{
+  "gameIDs": ["1234", "142214"]
+}
+###
+
 # Game Data Stream - doesnt really work in http file though because the continuous stream doesnt terminate
 GET {{baseUrl}}/api/monopoly/banker/1234/stream?playerID=B792A1E9
 Accept: application/json

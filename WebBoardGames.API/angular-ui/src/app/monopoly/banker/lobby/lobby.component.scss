@@ -4,15 +4,50 @@ mat-form-field {
 
 .carousel {
   display: grid;
-  grid-template-columns: 100% 100%;
+  grid-template-columns: 100% 100% 100%;
   height: 100%;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
 
   & > div {
-    scroll-snap-align: center;  
+    scroll-snap-align: center;
   }
+}
+
+.recent-game-entry {
+  margin: 1em;
+  padding: 2em;
+  border: 1px solid #ccc;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    'label btn'
+    'info btn';
+
+  .recent-game-label {
+    grid-area: label;
+    font-weight: 600;
+    font-size: 1.2em;
+    margin-bottom: 0.5em;
+  }
+  .recent-game-info {
+    grid-area: info;
+    font-size: 0.9em;
+    color: #555;
+  }
+  .recent-game-btn {
+    grid-area: btn;
+    align-self: center;
+    justify-self: end;
+  }
+}
+
+.no-recent-games {
+  text-align: center;
+  margin-top: 3em;
+  font-size: 0.9em;
 }
 
 .footer-info {

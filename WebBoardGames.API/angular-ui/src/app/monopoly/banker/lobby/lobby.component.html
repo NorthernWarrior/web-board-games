@@ -47,8 +47,7 @@
       </form>
     </div>
 
-    <ng-container *ngTemplateOutlet="footerInfo">
-    </ng-container>
+    <ng-container *ngTemplateOutlet="footerInfo"> </ng-container>
   </div>
 
   <div class="card">
@@ -109,15 +108,41 @@
       </form>
     </div>
 
-    <ng-container *ngTemplateOutlet="footerInfo">
-    </ng-container>
+    <ng-container *ngTemplateOutlet="footerInfo"> </ng-container>
   </div>
-</div>
 
+  <div class="card">
+    <div class="card-header card-header--light-blue">
+      <div class="card-title">Continue where you left off</div>
+      <div class="card-subtitle">Recent Game Sessions</div>
+    </div>
+    <div>
+      @if (recentGames().length > 0) {
+        <div class="recent-games-list">
+          @for (game of recentGames(); track game.gameID) {
+            <div class="recent-game-entry" >
+              <div class="recent-game-label">{{ game.gameLabel }}</div>
+              <div class="recent-game-info">
+                <span>Played as "{{ game.playerName }}"</span>
+              </div>
+              <div class="recent-game-btn">
+                <button class="card-btn card-btn--text" (click)="onRecentGameSelect(game)">Continue</button>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="no-recent-games">No recent games found.</div>
+      }
+    </div>
+    <ng-container *ngTemplateOutlet="footerInfo"> </ng-container>
+  </div>
+  
+</div>
 
 <ng-template #footerInfo>
   <div class="footer-info">
-    <span>&lt;&lt; Swipe left or right to switch between join and create game >></span><br/>
+    <span>&lt;&lt; Swipe left or right to switch between options >></span><br />
     <span>Monopoly Banker - v {{ version }} - Tobias Michel © {{ year }}</span>
   </div>
 </ng-template>
