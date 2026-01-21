@@ -4,13 +4,15 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/app",
+    "baseUrl": "./src",
     "types": [
       "node"
     ]
   },
   "include": [
-    "src/**/*.ts"
-, "src/app/shared-components/digits-display/digits-display.component.htmls"  ],
+    "src/**/*.ts",
+    "src/app/shared-components/digits-display/digits-display.component.html"
+  ],
   "exclude": [
     "src/**/*.spec.ts"
   ]

@@ -1,7 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { EventEmitter, Inject, inject, Injectable, PLATFORM_ID } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { map, Observable, of } from 'rxjs';
 
 export const specialPlayerID_Bank = null;
 export const specialPlayerID_FreeParking = 'free-parking';
@@ -24,7 +24,7 @@ export interface PlayerInfo {
   name: string;
   balance: number;
   isGameOwner: boolean;
-  isBankcrupt: boolean;
+  isBankrupt: boolean;
   isWinner: boolean;
 }
 
@@ -72,12 +72,14 @@ export class ApiService {
       const eventSource = new EventSource(url);
 
       eventSource.addEventListener('monopoly-banker-game-data', (event: MessageEvent) => {
-        observer.next(JSON.parse(event.data, (key, value) => {
-          if (key === "state" && typeof value === "number") {
-            return ['waiting-for-players', 'in-progress', 'completed'][value];
-          }
-          return value;
-        }));
+        observer.next(
+          JSON.parse(event.data, (key, value) => {
+            if (key === 'state' && typeof value === 'number') {
+              return ['waiting-for-players', 'in-progress', 'completed'][value];
+            }
+            return value;
+          }),
+        );
       });
 
       eventSource.onerror = (error) => {
@@ -91,21 +93,35 @@ export class ApiService {
     });
   }
 
+  gamesStillActive(gameIDs: string[]): Observable<{ [key: string]: boolean }> {
+    const gameIdsDistinct = Array.from(new Set(gameIDs));
+    if (gameIdsDistinct.length === 0) {
+      return of({});
+    }
+    return this._client
+      .post<{
+        gameIdStatus: { [key: string]: boolean };
+      }>(`${this._baseUrl}/api/monopoly/banker/still-active`, { gameIDs: gameIdsDistinct })
+      .pipe(map((response) => response.gameIdStatus));
+  }
+
   paymentExecute(
     gameID: string,
     sourcePlayerID: string | null,
     targetPlayerID: string | null,
     amount: number,
   ) {
-    return this._client.post<{
-      exists: boolean;
-      alreadyInProgress: boolean;
-      playerID: string | null;
-    }>(`${this._baseUrl}/api/monopoly/banker/payment`, {
-      gameID,
-      sourcePlayerID,
-      targetPlayerID,
-      amount,
-    }).subscribe();
+    return this._client
+      .post<{
+        exists: boolean;
+        alreadyInProgress: boolean;
+        playerID: string | null;
+      }>(`${this._baseUrl}/api/monopoly/banker/payment`, {
+        gameID,
+        sourcePlayerID,
+        targetPlayerID,
+        amount,
+      })
+      .subscribe();
   }
 }
