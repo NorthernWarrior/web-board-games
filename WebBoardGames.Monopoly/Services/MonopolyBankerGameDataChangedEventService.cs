@@ -1,7 +1,9 @@
-﻿using WebBoardGames.Persistence.Entities.Monopoly.Banker;
+﻿using FastEndpoints;
+using WebBoardGames.Persistence.Entities.Monopoly.Banker;
 
 namespace WebBoardGames.Monopoly.Services;
 
+[RegisterService<MonopolyBankerGameDataChangedEventService>(LifeTime.Singleton)]
 public record MonopolyBankerGameDataChangedEventArgs(Game ChangedGame);
 
 public class MonopolyBankerGameDataChangedEventService

@@ -1,7 +1,8 @@
 <Solution>
   <Folder Name="/src/" />
-  <Folder Name="/src/Domain/">
+  <Folder Name="/src/Core/">
     <Project Path="WebBoardGames.Application/WebBoardGames.Application.csproj" />
+    <Project Path="WebBoardGames.Domain/WebBoardGames.Domain.csproj" Id="62c9fb3e-8299-49b2-92dd-25a0b3b0cff7" />
     <Project Path="WebBoardGames.Monopoly/WebBoardGames.Monopoly.csproj" />
   </Folder>
   <Folder Name="/src/Persistence/">

@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\WebBoardGames.Application\WebBoardGames.Application.csproj" />
+    <ProjectReference Include="..\..\WebBoardGames.Domain\WebBoardGames.Domain.csproj" />
   </ItemGroup>
 
 </Project>

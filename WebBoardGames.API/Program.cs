@@ -2,8 +2,10 @@ using FastEndpoints;
 using FastEndpoints.Swagger;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.FeatureManagement;
+using MongoDB.Driver;
 using System.Threading.RateLimiting;
 using WebBoardGames.API;
+using WebBoardGames.Application;
 using WebBoardGames.Monopoly.Services;
 using WebBoardGames.Persistence;
 
@@ -42,14 +44,17 @@ builder.Services.AddOpenApi()
                AutoReplenishment = true,
            }));
     })
+    .RegisterServicesFromWebBoardGamesApplication()
     .RegisterServicesFromMonopoly();
+
 builder.AddMinimalApiAngular($"http://{builder.Configuration["DOCKER_HOST"] ?? "localhost"}:4200");
 
 var mongoConnectionString = builder.Configuration.GetConnectionString("MongoDb") ?? "mongodb://localhost:27017";
 builder.Services.AddDbContext<BoardGamesDbContext>(x => x
-    .EnableSensitiveDataLogging(builder.Environment.IsDevelopment())
-    .UseMongoDB(mongoConnectionString, "web-board-games")
-);
+        .EnableSensitiveDataLogging(builder.Environment.IsDevelopment())
+        .UseMongoDB(mongoConnectionString, "web-board-games")
+    )
+    .AddSingleton<IMongoClient>(sp => new MongoClient(mongoConnectionString));
 
 builder.Services
     .AddFastEndpoints(o =>

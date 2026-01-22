@@ -1,6 +1,6 @@
 using Bogus;
 using Shouldly;
-using WebBoardGames.Application.Helpers;
+using WebBoardGames.Domain.Helpers;
 
 namespace WebBoardGames.Application.Tests.Helpers;
 
@@ -80,11 +80,11 @@ public class PlayerNameHelperTests
     {
         var faker = new Faker();
         var names = new List<string>();
-        
+
         for (int i = 0; i < 15; i++)
         {
             var baseName = faker.Name.FirstName();
-            
+
             for (int j = 0; j < 3; j++)
             {
                 var uniqueName = PlayerNameHelper.EnsureUniqueName(names, baseName);

@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 namespace WebBoardGames.API;
 
 [JsonSerializable(typeof(ErrorResponse))]
+[JsonSerializable(typeof(Application.Features.Monitoring.DashboardQuick.DashboardQuickResponse))]
 [JsonSerializable(typeof(Monopoly.Features.Banker.GameCreate.GameCreateRequest)), JsonSerializable(typeof(Monopoly.Features.Banker.GameCreate.GameCreateResponse))]
 [JsonSerializable(typeof(Monopoly.Features.Banker.GameDataStream.GameDataStreamRequest)), JsonSerializable(typeof(Monopoly.Features.Banker.GameDataStream.GameDataStreamResponse))]
 [JsonSerializable(typeof(Monopoly.Features.Banker.GameJoin.GameJoinRequest)), JsonSerializable(typeof(Monopoly.Features.Banker.GameJoin.GameJoinResponse))]
