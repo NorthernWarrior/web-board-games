@@ -139,23 +139,84 @@ describe('ApiService', () => {
     const observable = service.getGameData('game123', 'player123');
     expect(observable).toBeDefined();
     
+    let completed = false;
+    
     // Subscribe and expect it will error (due to EventSource 404 in test environment)
     const subscription = observable.subscribe({
       next: () => {
         // If we receive data, that's also valid
-        subscription.unsubscribe();
-        done();
+        if (!completed) {
+          completed = true;
+          subscription.unsubscribe();
+          done();
+        }
       },
       error: () => {
         // EventSource will error in test environment, which is expected
-        done();
+        if (!completed) {
+          completed = true;
+          done();
+        }
       }
     });
     
     // Clean up after a short delay if neither happens
     setTimeout(() => {
-      subscription.unsubscribe();
-      done();
+      if (!completed) {
+        completed = true;
+        subscription.unsubscribe();
+        done();
+      }
     }, 100);
+  });
+
+  it('should check games still active with empty list', (done) => {
+    service.gamesStillActive([]).subscribe(response => {
+      expect(response).toEqual({});
+      done();
+    });
+  });
+
+  it('should check games still active with game IDs', (done) => {
+    const gameIDs = ['game123', 'game456'];
+    const mockResponse = {
+      gameIdStatus: {
+        'game123': true,
+        'game456': false
+      }
+    };
+
+    service.gamesStillActive(gameIDs).subscribe(response => {
+      expect(response).toEqual({ 'game123': true, 'game456': false });
+      done();
+    });
+
+    const req = httpMock.expectOne('/api/monopoly/banker/still-active');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ gameIDs });
+    req.flush(mockResponse);
+  });
+
+  it('should deduplicate game IDs when checking still active', (done) => {
+    const gameIDs = ['game123', 'game123', 'game456'];
+    const mockResponse = {
+      gameIdStatus: {
+        'game123': true,
+        'game456': false
+      }
+    };
+
+    service.gamesStillActive(gameIDs).subscribe(response => {
+      expect(response).toEqual({ 'game123': true, 'game456': false });
+      done();
+    });
+
+    const req = httpMock.expectOne('/api/monopoly/banker/still-active');
+    expect(req.request.method).toBe('POST');
+    // Should only contain unique IDs
+    expect(req.request.body.gameIDs.length).toBe(2);
+    expect(req.request.body.gameIDs).toContain('game123');
+    expect(req.request.body.gameIDs).toContain('game456');
+    req.flush(mockResponse);
   });
 });
