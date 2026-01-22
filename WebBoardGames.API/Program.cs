@@ -54,6 +54,7 @@ builder.Services.AddDbContext<BoardGamesDbContext>(x => x
 builder.Services
     .AddFastEndpoints(o =>
     {
+        o.SourceGeneratorDiscoveredTypes.AddRange(WebBoardGames.Application.DiscoveredTypes.All);
         o.SourceGeneratorDiscoveredTypes.AddRange(WebBoardGames.Monopoly.DiscoveredTypes.All);
     });
 

@@ -1,0 +1,18 @@
+
+# Swagger Documentation
+GET {{baseUrl}}/swagger
+Accept: application/json
+
+###
+
+# Healthcheck
+GET {{baseUrl}}/api/monitoring/health
+Accept: application/json
+
+###
+
+# Dashboard - Quick Overview
+GET {{baseUrl}}/api/monitoring/dashboard/quick
+Accept: application/json
+
+###

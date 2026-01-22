@@ -61,4 +61,8 @@ FROM ${FINAL_BASE_IMAGE:-mcr.microsoft.com/dotnet/aspnet:10.0} AS final
 WORKDIR /app
 EXPOSE 8080
 COPY --from=publish /app/publish .
+
+HEALTHCHECK --interval=1s --timeout=3s \
+    CMD curl http://localhost:8080/api/monitoring/health || exit 1
+
 ENTRYPOINT ["./WebBoardGames.API"]
