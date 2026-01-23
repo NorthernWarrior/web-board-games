@@ -1,23 +1,34 @@
 services:
-  board-games-api:
-    image: ${DOCKER_REGISTRY-}web-board-games
-    build:
-      context: .
-      dockerfile: WebBoardGames.API/Dockerfile
-    networks:
-      - frontend
-      - backend
-    environment:
-      - DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
-
   mongodb:
     image: mongo:latest
     container_name: mongodb
     volumes:
       - ./docker_data/mongodb:/data/db
-    restart: always
+    restart: unless-stopped
     networks:
       - backend
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      start_interval: 1s
+      start_period: 30s
+      interval: 10m
+      timeout: 10s
+      retries: 3
+
+
+  board-games-api:
+    image: ${DOCKER_REGISTRY-}web-board-games
+    build:
+      context: .
+      dockerfile: WebBoardGames.API/Dockerfile
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - frontend
+      - backend
+    environment:
+      - DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 
 
 networks:

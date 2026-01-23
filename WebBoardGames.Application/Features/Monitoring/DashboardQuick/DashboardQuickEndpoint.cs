@@ -1,18 +1,17 @@
 ﻿using Humanizer;
 using Microsoft.EntityFrameworkCore;
+using WebBoardGames.Domain.Options;
 using WebBoardGames.Persistence;
 using WebBoardGames.Persistence.Entities.Monopoly.Banker;
 
 namespace WebBoardGames.Application.Features.Monitoring.DashboardQuick;
 
-public sealed class DashboardQuickEndpoint(BoardGamesDbContext _context, MongoDbDashboardService _mongoDb) : EndpointWithoutRequest<DashboardQuickResponse>
+public sealed class DashboardQuickEndpoint(BoardGamesDbContext _context, MongoDbDashboardService _mongoDb, ApiKeysOptions apiKeys) : EndpointWithoutRequest<DashboardQuickResponse>
 {
-    // TODO: Replace AllowAnonymous with proper authorization
     public override void Configure()
     {
         Get("/dashboard/quick");
         Group<MonitoringGroup>();
-        AllowAnonymous();
     }
 
     public async override Task HandleAsync(CancellationToken ct)

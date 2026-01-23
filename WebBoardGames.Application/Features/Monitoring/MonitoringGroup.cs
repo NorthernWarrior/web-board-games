@@ -1,6 +1,4 @@
-﻿using FastEndpoints;
-
-namespace WebBoardGames.Application.Features.Monitoring;
+﻿namespace WebBoardGames.Application.Features.Monitoring;
 
 internal class MonitoringGroup : Group
 {
@@ -8,7 +6,8 @@ internal class MonitoringGroup : Group
     {
         Configure("monitoring", ep =>
         {
-
+            ep.AuthSchemes("ApiKey");
+            ep.Claims("monitoring:ro");
         });
     }
 }

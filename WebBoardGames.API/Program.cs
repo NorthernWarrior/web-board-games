@@ -1,11 +1,15 @@
 using FastEndpoints;
 using FastEndpoints.Swagger;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.FeatureManagement;
 using MongoDB.Driver;
 using System.Threading.RateLimiting;
 using WebBoardGames.API;
+using WebBoardGames.API.Authentication;
 using WebBoardGames.Application;
+using WebBoardGames.Domain.Constants;
+using WebBoardGames.Domain.Options;
 using WebBoardGames.Monopoly.Services;
 using WebBoardGames.Persistence;
 
@@ -44,6 +48,7 @@ builder.Services.AddOpenApi()
                AutoReplenishment = true,
            }));
     })
+    .AddMonopolyDomainOptionServices(builder.Configuration)
     .RegisterServicesFromWebBoardGamesApplication()
     .RegisterServicesFromMonopoly();
 
@@ -61,7 +66,14 @@ builder.Services
     {
         o.SourceGeneratorDiscoveredTypes.AddRange(WebBoardGames.Application.DiscoveredTypes.All);
         o.SourceGeneratorDiscoveredTypes.AddRange(WebBoardGames.Monopoly.DiscoveredTypes.All);
-    });
+    })
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = AuthConstants.BearerSchema;
+    })
+    .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(AuthConstants.ApiKeySchema, null)
+    .Services
+    .AddAuthorization();
 
 if (builder.Environment.IsDevelopment())
 {
@@ -81,12 +93,14 @@ var app = builder.Build();
 
 var supportedCultures = new[] { "en", "en-US", "de", "de-DE" };
 app.UseRequestLocalization(opts =>
-{
-    opts.ApplyCurrentCultureToResponseHeaders = true;
-    opts.SetDefaultCulture("en");
-    opts.AddSupportedCultures(supportedCultures);
-    opts.AddSupportedUICultures(supportedCultures);
-});
+    {
+        opts.ApplyCurrentCultureToResponseHeaders = true;
+        opts.SetDefaultCulture("en");
+        opts.AddSupportedCultures(supportedCultures);
+        opts.AddSupportedUICultures(supportedCultures);
+    })
+    .UseAuthentication()
+    .UseAuthorization();
 
 
 // Use the correct Angular static output directory for production, with absolute path

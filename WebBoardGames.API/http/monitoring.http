@@ -14,5 +14,6 @@ Accept: application/json
 # Dashboard - Quick Overview
 GET {{baseUrl}}/api/monitoring/dashboard/quick
 Accept: application/json
+X-API-KEY: {{apiKey_Monitoring}}
 
 ###

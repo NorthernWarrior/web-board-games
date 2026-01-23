@@ -62,7 +62,9 @@ WORKDIR /app
 EXPOSE 8080
 COPY --from=publish /app/publish .
 
-HEALTHCHECK --interval=1s --timeout=3s \
-    CMD curl http://localhost:8080/api/monitoring/health || exit 1
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -fsS http://localhost:8080/api/monitoring/health || exit 1
+
 
 ENTRYPOINT ["./WebBoardGames.API"]
