@@ -241,14 +241,14 @@ public class GamesCleanupScheduledJobTests(WebApplicationFixture fixture) : Inte
         return new Game
         {
             ID = ObjectId.GenerateNewId(),
-            ExternalID = Guid.NewGuid().ToString(),
+            ExternalID = Guid.NewGuid().ToString()[0..8].ToUpperInvariant(),
             Label = _faker.Lorem.Sentence(3),
             State = state,
-            Players = new List<Player>(),
+            Players = [],
             Options = new Options
             {
-                MoneyOnFreeParking = _faker.Random.Bool(),
-                DoubleMoneyOnGo = _faker.Random.Bool()
+                MoneyOnFreeParking = false,
+                DoubleMoneyOnGo = false
             },
             CreatedUTC = DateTime.UtcNow.AddDays(-30),
             UpdatedUTC = updatedUTC,

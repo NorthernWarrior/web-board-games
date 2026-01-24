@@ -250,10 +250,10 @@ public class MonopolyBankerGameServiceTests
         return new Game
         {
             ID = ObjectId.GenerateNewId(),
-            ExternalID = Guid.NewGuid().ToString(),
+            ExternalID = Guid.NewGuid().ToString()[0..8].ToUpperInvariant(),
             Label = "Test Game",
             State = state,
-            Players = new List<Player>(),
+            Players = [],
             Options = new Options
             {
                 MoneyOnFreeParking = false,
