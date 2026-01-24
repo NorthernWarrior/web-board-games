@@ -1,12 +1,18 @@
 ﻿using Humanizer;
 using Microsoft.EntityFrameworkCore;
 using WebBoardGames.Domain.Options;
+using WebBoardGames.Domain.Services;
+using WebBoardGames.Monopoly.Features.Banker.Services;
 using WebBoardGames.Persistence;
 using WebBoardGames.Persistence.Entities.Monopoly.Banker;
 
 namespace WebBoardGames.Application.Features.Monitoring.DashboardQuick;
 
-public sealed class DashboardQuickEndpoint(BoardGamesDbContext _context, MongoDbDashboardService _mongoDb, ApiKeysOptions apiKeys) : EndpointWithoutRequest<DashboardQuickResponse>
+public sealed class DashboardQuickEndpoint(
+    BoardGamesDbContext _context,
+    MongoDbDashboardService _mongoDb,
+    IJobSchedulerService _scheduler
+) : EndpointWithoutRequest<DashboardQuickResponse>
 {
     public override void Configure()
     {
@@ -18,6 +24,7 @@ public sealed class DashboardQuickEndpoint(BoardGamesDbContext _context, MongoDb
     {
         Response = new(
             FileSystem: await _FetchQuickFileSystemInfoAsync(ct),
+            ScheduledJobs: await _FetchQuickScheduleJobsInfo(ct),
             Monopoly: await _FetchQuickMonopolyInfo(ct)
         );
     }
@@ -27,6 +34,27 @@ public sealed class DashboardQuickEndpoint(BoardGamesDbContext _context, MongoDb
         ct.ThrowIfCancellationRequested();
         var stats = await _mongoDb.GetStatsAsync(ct);
         return new(stats.TotalSize.Bytes().Humanize(), stats.TotalSize);
+    }
+
+    private async ValueTask<QuickScheduledJobsInfo> _FetchQuickScheduleJobsInfo(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var jobs = await _scheduler.GetScheduledJobsAsync(ct);
+        var running = await _scheduler.GetRunningJobsAsync(ct);
+        return new(
+            Jobs: [.. jobs.Select(x => new QuickScheduledJobInfo(
+                x.Group,
+                x.Key,
+                x.Triggers.Select(t => new QuickScheduledJobTriggerInfo(
+                    t.Group,
+                    t.Key,
+                    t.NextFireTime,
+                    t.PreviousFireTime,
+                    t.Info
+                )).ToList().AsReadOnly()
+            ))],
+            Running: running
+        );
     }
 
     private async ValueTask<QuickMonopolyInfo> _FetchQuickMonopolyInfo(CancellationToken ct)
@@ -47,16 +75,9 @@ public sealed class DashboardQuickEndpoint(BoardGamesDbContext _context, MongoDb
         var cntInProgress = allGamesCappedAtThousand.Count(x => x.State == MonopolyBankerGameState.InProgress);
         var cntCompleted = allGamesCappedAtThousand.Count(x => x.State == MonopolyBankerGameState.Completed);
 
-        var cutoffDateWaitingForPlayers = DateTime.UtcNow.AddDays(-1);
-        var cutoffDateInProgress = DateTime.UtcNow.AddDays(-7);
-        var cutoffDateCompleted = DateTime.UtcNow.AddDays(-1);
-
-        var cntDueForCleanup = allGamesCappedAtThousand
-            .Count(x =>
-                (x.State == MonopolyBankerGameState.WaitingForPlayers && x.UpdatedUTC < cutoffDateWaitingForPlayers) ||
-                (x.State == MonopolyBankerGameState.InProgress && x.UpdatedUTC < cutoffDateInProgress) ||
-                (x.State == MonopolyBankerGameState.Completed && x.UpdatedUTC < cutoffDateCompleted)
-            );
+        var cntDueForCleanup = MonopolyBankerGameService
+            .WhereDueForCleanup(allGamesCappedAtThousand)
+            .Count();
 
         var cntTotalPlayers = allGamesCappedAtThousand.Select(x => x.Players.Count).Sum();
 

@@ -1,11 +1,31 @@
-﻿namespace WebBoardGames.Application.Features.Monitoring.DashboardQuick;
+﻿using System.Collections.ObjectModel;
+
+namespace WebBoardGames.Application.Features.Monitoring.DashboardQuick;
 
 public record DashboardQuickResponse(
     QuickFileSystemInfo FileSystem,
+    QuickScheduledJobsInfo ScheduledJobs,
     QuickMonopolyInfo Monopoly
 );
 
 public record QuickFileSystemInfo(string MongoDbSize, long MongoDbSizeBytes);
+
+public record QuickScheduledJobsInfo(
+    ReadOnlyCollection<QuickScheduledJobInfo> Jobs,
+    ReadOnlyCollection<string> Running
+);
+public record QuickScheduledJobInfo(
+    string Group,
+    string Key,
+    ReadOnlyCollection<QuickScheduledJobTriggerInfo> Triggers
+);
+public record QuickScheduledJobTriggerInfo(
+    string Group,
+    string Name,
+    DateTimeOffset? NextFireTime,
+    DateTimeOffset? PrevFireTime,
+    string Info
+);
 
 public record QuickMonopolyInfo(
     QuickMonopolyBankerInfo Banker

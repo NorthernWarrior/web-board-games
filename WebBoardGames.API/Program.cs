@@ -4,12 +4,16 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.FeatureManagement;
 using MongoDB.Driver;
+using Quartz;
 using System.Threading.RateLimiting;
 using WebBoardGames.API;
 using WebBoardGames.API.Authentication;
 using WebBoardGames.Application;
+using WebBoardGames.Application.ScheduledJobs;
+using WebBoardGames.Application.Services;
 using WebBoardGames.Domain.Constants;
 using WebBoardGames.Domain.Options;
+using WebBoardGames.Domain.Services;
 using WebBoardGames.Monopoly.Services;
 using WebBoardGames.Persistence;
 
@@ -48,6 +52,12 @@ builder.Services.AddOpenApi()
                AutoReplenishment = true,
            }));
     })
+    .AddQuartz()
+    .AddQuartzHostedService(options =>
+    {
+        options.WaitForJobsToComplete = true;
+    })
+    .AddSingleton<IJobSchedulerService, QuartzJobSchedulerService>()
     .AddMonopolyDomainOptionServices(builder.Configuration)
     .RegisterServicesFromWebBoardGamesApplication()
     .RegisterServicesFromMonopoly();
@@ -139,5 +149,8 @@ if (!app.Environment.EnvironmentName.Equals("Test", StringComparison.OrdinalIgno
 }
 #endif
 
+var scheduler = app.Services.GetRequiredService<IJobSchedulerService>();
+await scheduler.StartAsync(default);
+await scheduler.ScheduleJobAsync<GamesCleanupScheduledJob>(new JobCronScheduleSettings("0 0 4 * * ?", true, true), default);
 
 await app.RunAsync();
