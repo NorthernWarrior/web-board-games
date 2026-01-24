@@ -1,4 +1,11 @@
 services:
+  mongodb:  
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+    ports:
+      - "27017:27017"
+
   board-games-api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -9,10 +16,6 @@ services:
       - "52102:8080"
     extra_hosts:
       - "host.docker.internal:host-gateway"
-
-  mongodb:  
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=admin
-    ports:
-      - "27017:27017"
+    depends_on:
+      mongodb:
+        condition: service_started  # Overwirte "condition: service_healthy" in develop mode

@@ -33,7 +33,7 @@
 		<PackageReference Include="Microsoft.FeatureManagement.AspNetCore" Version="4.4.0" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\WebBoardGames.Monopoly\WebBoardGames.Monopoly.csproj" />
+		<ProjectReference Include="..\WebBoardGames.Application\WebBoardGames.Application.csproj" />
 	</ItemGroup>
 
 </Project>

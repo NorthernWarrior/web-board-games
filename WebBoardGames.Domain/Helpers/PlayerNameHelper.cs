@@ -1,4 +1,4 @@
-namespace WebBoardGames.Application.Helpers;
+namespace WebBoardGames.Domain.Helpers;
 
 public static class PlayerNameHelper
 {
@@ -12,13 +12,13 @@ public static class PlayerNameHelper
     {
         var trimmedName = proposedName.Trim();
         var finalName = trimmedName;
-        
+
         var idx = 0;
         while (existingNames.Any(x => x == finalName))
         {
             finalName = $"{trimmedName} ({++idx})";
         }
-        
+
         return finalName;
     }
 }

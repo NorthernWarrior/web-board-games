@@ -7,13 +7,15 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="FastEndpoints" Version="7.2.0" />
 		<PackageReference Include="FastEndpoints.Generator" Version="7.2.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\WebBoardGames.Application\WebBoardGames.Application.csproj" />
+		<ProjectReference Include="..\WebBoardGames.Domain\WebBoardGames.Domain.csproj" />
+		<ProjectReference Include="..\WebBoardGames.Persistence\WebBoardGames.Persistence.csproj" />
 	</ItemGroup>
 
 </Project>

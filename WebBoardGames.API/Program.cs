@@ -1,9 +1,19 @@
 using FastEndpoints;
 using FastEndpoints.Swagger;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.FeatureManagement;
+using MongoDB.Driver;
+using Quartz;
 using System.Threading.RateLimiting;
 using WebBoardGames.API;
+using WebBoardGames.API.Authentication;
+using WebBoardGames.Application;
+using WebBoardGames.Application.ScheduledJobs;
+using WebBoardGames.Application.Services;
+using WebBoardGames.Domain.Constants;
+using WebBoardGames.Domain.Options;
+using WebBoardGames.Domain.Services;
 using WebBoardGames.Monopoly.Services;
 using WebBoardGames.Persistence;
 
@@ -42,20 +52,38 @@ builder.Services.AddOpenApi()
                AutoReplenishment = true,
            }));
     })
+    .AddQuartz()
+    .AddQuartzHostedService(options =>
+    {
+        options.WaitForJobsToComplete = true;
+    })
+    .AddSingleton<IJobSchedulerService, QuartzJobSchedulerService>()
+    .AddMonopolyDomainOptionServices(builder.Configuration)
+    .RegisterServicesFromWebBoardGamesApplication()
     .RegisterServicesFromMonopoly();
+
 builder.AddMinimalApiAngular($"http://{builder.Configuration["DOCKER_HOST"] ?? "localhost"}:4200");
 
 var mongoConnectionString = builder.Configuration.GetConnectionString("MongoDb") ?? "mongodb://localhost:27017";
 builder.Services.AddDbContext<BoardGamesDbContext>(x => x
-    .EnableSensitiveDataLogging(builder.Environment.IsDevelopment())
-    .UseMongoDB(mongoConnectionString, "web-board-games")
-);
+        .EnableSensitiveDataLogging(builder.Environment.IsDevelopment())
+        .UseMongoDB(mongoConnectionString, "web-board-games")
+    )
+    .AddSingleton<IMongoClient>(sp => new MongoClient(mongoConnectionString));
 
 builder.Services
     .AddFastEndpoints(o =>
     {
+        o.SourceGeneratorDiscoveredTypes.AddRange(WebBoardGames.Application.DiscoveredTypes.All);
         o.SourceGeneratorDiscoveredTypes.AddRange(WebBoardGames.Monopoly.DiscoveredTypes.All);
-    });
+    })
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = AuthConstants.BearerSchema;
+    })
+    .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(AuthConstants.ApiKeySchema, null)
+    .Services
+    .AddAuthorization();
 
 if (builder.Environment.IsDevelopment())
 {
@@ -75,12 +103,14 @@ var app = builder.Build();
 
 var supportedCultures = new[] { "en", "en-US", "de", "de-DE" };
 app.UseRequestLocalization(opts =>
-{
-    opts.ApplyCurrentCultureToResponseHeaders = true;
-    opts.SetDefaultCulture("en");
-    opts.AddSupportedCultures(supportedCultures);
-    opts.AddSupportedUICultures(supportedCultures);
-});
+    {
+        opts.ApplyCurrentCultureToResponseHeaders = true;
+        opts.SetDefaultCulture("en");
+        opts.AddSupportedCultures(supportedCultures);
+        opts.AddSupportedUICultures(supportedCultures);
+    })
+    .UseAuthentication()
+    .UseAuthorization();
 
 
 // Use the correct Angular static output directory for production, with absolute path
@@ -119,5 +149,8 @@ if (!app.Environment.EnvironmentName.Equals("Test", StringComparison.OrdinalIgno
 }
 #endif
 
+var scheduler = app.Services.GetRequiredService<IJobSchedulerService>();
+await scheduler.StartAsync(default);
+await scheduler.ScheduleJobAsync<GamesCleanupScheduledJob>(new JobCronScheduleSettings("0 0 4 * * ?", true, true), default);
 
 await app.RunAsync();
