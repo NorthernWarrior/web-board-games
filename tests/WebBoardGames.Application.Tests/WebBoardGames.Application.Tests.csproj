@@ -26,6 +26,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\WebBoardGames.Application\WebBoardGames.Application.csproj" />
     <ProjectReference Include="..\..\WebBoardGames.Domain\WebBoardGames.Domain.csproj" />
+    <ProjectReference Include="..\..\WebBoardGames.Monopoly\WebBoardGames.Monopoly.csproj" />
+    <ProjectReference Include="..\..\WebBoardGames.Persistence\WebBoardGames.Persistence.csproj" />
   </ItemGroup>
 
 </Project>
