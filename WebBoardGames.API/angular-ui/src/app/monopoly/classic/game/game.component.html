@@ -1,3 +1,11 @@
-<div>
-    
-</div>
+<!-- @if (board(); as board) {
+  <div>
+    <ul>
+      @for (field of board.fields; track field.id) {
+        <li>{{ board.skin.fieldNames[field.id] }}</li>
+      }
+    </ul>
+  </div>
+}-->
+
+<app-game-engine-canvas (engineInitialized)="onEngineInitialized($event)" />
