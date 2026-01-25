@@ -3,7 +3,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ApiService, GameDataResponse } from '../../../api/api-service';
+import { MonopolyBankerApiService, GameDataResponse } from '../../../api/monopoly-banker.api-service';
 import { MonopolyBankerGameUiStateDefaultComponent } from './ui-states/default/default.component';
 import { MonopolyBankerGameUiStatePaySendComponent } from './ui-states/pay-send/pay-send.component';
 import { MonopolyBankerGameUiStatePayReceiveComponent } from './ui-states/pay-receive/pay-receive.component';
@@ -32,7 +32,7 @@ type UiState = 'default' | 'pay-send' | 'pay-receive' | 'passed-go' | 'free-park
   styleUrls: ['../game-styles.scss', './game.component.scss'],
 })
 export class MonopolyBankerGameComponent {
-  private readonly _api = inject(ApiService);
+  private readonly _api = inject(MonopolyBankerApiService);
   private readonly _router = inject(Router);
   private readonly _platformId = inject(PLATFORM_ID);
   private readonly _recentGamesService = inject(RecentGamesService);

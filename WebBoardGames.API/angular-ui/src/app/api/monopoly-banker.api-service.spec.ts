@@ -1,22 +1,22 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { ApiService, GameCreateRequest, GameJoinRequest, specialPlayerID_Bank, specialPlayerID_FreeParking } from './api-service';
+import { GameCreateRequest, GameJoinRequest, MonopolyBankerApiService, specialPlayerID_Bank, specialPlayerID_FreeParking } from './monopoly-banker.api-service';
 
-describe('ApiService', () => {
-  let service: ApiService;
+describe('MonopolyBankerApiService', () => {
+  let service: MonopolyBankerApiService;
   let httpMock: HttpTestingController;
   const mockPaymentResponse = { exists: true, alreadyInProgress: false, playerID: null };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
-        ApiService,
+        MonopolyBankerApiService,
         provideHttpClient(),
         provideHttpClientTesting()
       ]
     });
-    service = TestBed.inject(ApiService);
+    service = TestBed.inject(MonopolyBankerApiService);
     httpMock = TestBed.inject(HttpTestingController);
   });
 

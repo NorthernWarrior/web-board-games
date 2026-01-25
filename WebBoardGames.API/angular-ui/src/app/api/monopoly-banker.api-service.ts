@@ -42,7 +42,7 @@ export interface GameDataResponse {
 }
 
 @Injectable({ providedIn: 'root' })
-export class ApiService {
+export class MonopolyBankerApiService {
   private readonly _baseUrl = '';
   private readonly _client = inject(HttpClient);
   private readonly _platformId = inject(PLATFORM_ID);

@@ -1,0 +1,41 @@
+.app-button-tile-border {
+    all: unset;
+    //
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: box-shadow 0.3s ease;
+    //
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas: "icon" "label" "description";
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.app-button-tile-border:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.app-button-tile-icon {
+    grid-area: icon;
+    width: 100px;
+    height: 100px;
+    margin: auto;
+}
+
+.app-button-tile-label {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-top: 8px;
+    grid-area: label;
+}
+
+.app-button-tile-description {
+    font-size: 1em;
+    color: #666;
+    margin-top: 4px;
+    grid-area: description;
+}

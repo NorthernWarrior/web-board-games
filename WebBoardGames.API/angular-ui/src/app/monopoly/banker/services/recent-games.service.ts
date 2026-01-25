@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { ApiService } from 'app/api/api-service';
+import { MonopolyBankerApiService } from 'app/api/monopoly-banker.api-service';
 import { StorageService } from 'app/services/storage.service';
 import { map, Observable, of } from 'rxjs';
 
@@ -17,7 +17,7 @@ export class RecentGamesService {
 
   private readonly _storageKey = 'monopoly-banker-recent-games';
   private readonly _storage = inject(StorageService);
-  private readonly _api = inject(ApiService);
+  private readonly _api = inject(MonopolyBankerApiService);
 
   private _recentGames: RecentGame[]|null = null;
 
