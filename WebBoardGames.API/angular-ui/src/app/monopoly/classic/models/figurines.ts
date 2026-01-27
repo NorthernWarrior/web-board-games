@@ -1,0 +1,1 @@
+export type FigureType = "car" | "hat" | "dog" | "ship" | "shoe" | "thimble" | "iron"; 

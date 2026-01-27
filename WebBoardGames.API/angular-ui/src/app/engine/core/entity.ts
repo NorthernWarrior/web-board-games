@@ -1,7 +1,20 @@
 import * as PIXI from 'pixi.js';
+import { GameEngine } from './engine';
 
 export class GameEntity {
+  private _engine: GameEngine | null = null;
   private _app: PIXI.Application | null = null;
+  private readonly _children: GameEntity[] = [];
+  private _childrenAdded: GameEntity[] = [];
+  private _parent: GameEntity | null = null;
+
+  set engine(value: GameEngine | null) {
+    this._engine = value;
+  }
+  get engine(): GameEngine | null {
+    return this._engine;
+  }
+
   set app(value: PIXI.Application | null) {
     this._app = value;
   }
@@ -9,12 +22,14 @@ export class GameEntity {
     return this._app;
   }
 
+  get parent(): GameEntity | null {
+    return this._parent;
+  }
+
   private readonly _container: PIXI.Container<PIXI.ContainerChild> = new PIXI.Container();
   get container(): PIXI.Container<PIXI.ContainerChild> {
     return this._container;
   }
-
-  private readonly _children: GameEntity[] = [];
 
   public get X(): number {
     return this.container.x;
@@ -39,20 +54,33 @@ export class GameEntity {
 
   addChild(entity: GameEntity): void {
     this._children.push(entity);
+    entity.engine = this.engine;
     entity.app = this.app;
+    entity._parent = this;
     this._container.addChild(entity.container);
+    this._childrenAdded.push(entity);
+  }
+
+  removeChild(entity: GameEntity) {
+    this._children.splice(this._children.indexOf(entity), 1);
+    this._container.removeChild(entity.container);
+    entity.container.destroy({ children: true });
   }
 
   onInitialize(): void {
     this.onInitializeOverride();
-    for (const child of this._children) {
-      child.onInitialize();
-    }
   }
 
   onInitializeOverride(): void {}
 
   onUpdate(delta: PIXI.Ticker): void {
+    if (this._childrenAdded.length > 0) {
+      for (const child of this._childrenAdded) {
+        child.onInitialize();
+      }
+      this._childrenAdded = [];
+    }
+
     this.onUpdateOverride(delta);
     for (const child of this._children) {
       child.onUpdate(delta);
@@ -60,4 +88,24 @@ export class GameEntity {
   }
 
   onUpdateOverride(delta: PIXI.Ticker): void {}
+
+  onAnimationFrame(delta: PIXI.Ticker): void {
+    this.onAnimationFrameOverride(delta);
+    for (const child of this._children) {
+      child.onAnimationFrame(delta);
+    }
+  }
+  onAnimationFrameOverride(delta: PIXI.Ticker): void {}
+
+  //#region Fluent API
+  withPosition(x: number, y: number): this {
+    this.X = x;
+    this.Y = y;
+    return this;
+  }
+  withRotationDegrees(rotationDegrees: number): this {
+    this.rotationDegrees = rotationDegrees;
+    return this;
+  }
+  //#endregion
 }

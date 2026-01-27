@@ -13,7 +13,7 @@ services:
       - DOCKER_HOST=host.docker.internal
       - ConnectionStrings__MongoDb=mongodb://admin:admin@mongodb:27017
     ports:
-      - "52102:8080"
+      - "52103:8080"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:

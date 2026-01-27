@@ -15,10 +15,14 @@ export class MonopolyClassicGameComponent  {
   constructor() {
     const board = new Board();
     board.reset();
+    board.addPlayer('1', 'Tobi', 'car', 1500);
+    board.addPlayer('2', 'Bob', 'ship', 1500);
+    board.addPlayer('3', 'Charlie', 'shoe', 1500);
+    board.addPlayer('4', 'Alice', 'iron', 1500);
     this.board.set(board);
   }
 
   onEngineInitialized($event: GameEngine) {
-    $event.addEntity(new BoardEntity(this.board()));
+    $event.addEntity(new BoardEntity(this.board(), "1"));
   }
 }

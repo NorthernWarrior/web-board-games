@@ -1,0 +1,5 @@
+{
+    "scripts": {
+        "start": "cd ./WebBoardGames.API/angular-ui && npm start"
+    }
+}

@@ -12,3 +12,5 @@ export const STROKE_NORMAL = 1 * UI_SCALE;
 export const STROKE_OUTLINE = 6 * UI_SCALE;
 
 export const BOARD_SIZE = CENTER_SIZE;
+
+export const FIELD_COUNT = 40;
