@@ -1,4 +1,3 @@
-import { BoardEntity } from 'app/monopoly/classic/game/entities/board-entity';
 import { GameEntity } from './entity';
 import * as PIXI from 'pixi.js';
 
@@ -137,7 +136,7 @@ export class GameEngine {
     sessionStorage.setItem('game-engine.zoom', this._rootContainer!.scale.x.toString());
   }
 
-  addEntity(entity: BoardEntity) {
+  addEntity(entity: GameEntity) {
     this._entities.push(entity);
     this._rootContainer?.addChild(entity.container);
     entity.app = this._app;
