@@ -1,1 +1,65 @@
-<app-game-engine-canvas (engineInitialized)="onEngineInitialized($event)" [clearColor]="16777215" />
+<div class="maze-generator-container">
+  @switch (uimode()) {
+    @case ('generate') {
+      <div class="toolbar">
+        <form [formGroup]="formGenerate">
+          <mat-form-field>
+            <mat-label>Grid Width</mat-label>
+            <mat-select formControlName="width">
+              @for (i of [10, 15, 20, 25, 30, 35, 40]; track i) {
+                <mat-option [value]="i">{{ i }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Grid Height</mat-label>
+            <mat-select formControlName="height">
+              @for (i of [10, 15, 20, 25, 30, 35, 40]; track i) {
+                <mat-option [value]="i">{{ i }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <button mat-raised-button color="primary" (click)="onEnterPrintLayout()">Print Layout</button>
+        </form>
+      </div>
+      <app-game-engine-canvas
+        (engineInitialized)="onEngineInitialized($event)"
+        [clearColor]="16777215"
+      />
+    }
+
+    @case ('print-layout') {
+      <div class="toolbar">
+        <form [formGroup]="formLayout">
+          <button mat-raised-button color="primary" (click)="uimode.set('generate')">Back</button>
+
+          <mat-form-field>
+            <mat-label>Number of Mazes</mat-label>
+            <mat-select formControlName="count">
+              @for (i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; track i) {
+                <mat-option [value]="i">{{ i }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <button mat-raised-button color="primary" [disabled]="!canPrint()" (click)="onPrint()">Print</button>
+        </form>
+      </div>
+
+      <div class="content">
+        @for (imageUrlPair of imageUrlPairs(); track $index) {
+          <div class="page">
+            <div class="page-image--half-height">
+              <img [src]="imageUrlPair[0]" />
+            </div>
+            @if (imageUrlPair[1]) {
+              <div class="page-image--half-height">
+                <img [src]="imageUrlPair[1]" />
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

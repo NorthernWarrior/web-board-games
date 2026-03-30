@@ -1,249 +1,73 @@
-# Web Board Games - Copilot Instructions
+# Web Board Games — Project Guidelines
 
-## Project Overview
+A collection of browser-based board games and fun interactive experiences. Currently includes Monopoly Banker, Monopoly Classic (Pixi.js board), and a maze generator — with more games planned.
 
-This is a full-stack web application for playing board games online, specifically focused on Monopoly Banker game. The project consists of:
-- **Backend**: .NET 10 web API using FastEndpoints, MongoDB for persistence
-- **Frontend**: Angular 21 with Angular Material UI components
-- **Architecture**: Clean architecture with Domain, Application, Persistence, and API layers
+## Architecture
 
-## Technology Stack
+**Backend** — .NET 10, FastEndpoints, MongoDB (EF Core provider), Quartz.NET scheduled jobs, feature flags.
+Clean architecture layers: `Domain → Application → Monopoly → Persistence → API`.
 
-### Backend (.NET)
-- **.NET Version**: 10.0.102
-- **Framework**: ASP.NET Core with minimal APIs via FastEndpoints
-- **Database**: MongoDB with official MongoDB.Driver
-- **Key Libraries**: 
-  - FastEndpoints for API endpoints
-  - Quartz.NET for scheduled jobs
-  - Microsoft.FeatureManagement for feature flags
-  - Entity Framework Core (alongside MongoDB)
-- **Testing**: xUnit, Alba for HTTP testing, Testcontainers for MongoDB, Shouldly, Bogus
+**Frontend** — Angular 21, Angular Material 3, SSR via `@angular/ssr`, Pixi.js game engine.
+All components are **standalone** (no NgModules). Zoneless change detection (`provideZonelessChangeDetection()`).
 
-### Frontend (Angular)
-- **Angular Version**: 21.0.8
-- **Node Version**: 20.x
-- **UI Framework**: Angular Material 21.0.6
-- **TypeScript**: 5.9.2
-- **Server-Side Rendering**: Enabled via @angular/ssr
-- **Testing**: Karma + Jasmine with headless Chrome
+### Key conventions
 
-## Project Structure
+- **Feature-based organization**: Each game/feature gets its own folder with endpoint, request, response, and validator co-located (e.g. `WebBoardGames.Monopoly/Features/Banker/GameCreate/`)
+- **FastEndpoints pattern**: Inherit `Endpoint<TRequest, TResponse>`, configure route/group/auth in `Configure()`, logic in `HandleAsync()`. Endpoint discovery via source generators (`DiscoveredTypes.All`)
+- **Angular signals everywhere**: Use `signal()`, `computed()`, `input()`, `output()`, `effect()` — not decorators
+- **Game engine**: `src/app/engine/` wraps Pixi.js. `GameEngineCanvasComponent` emits a `GameEngine` instance; add `GameEntity` subclasses to it. Used by Monopoly Classic and Maze Generator
+- **Shared components module**: `src/app/shared-components/` — `ButtonTileComponent`, `ButtonTilesGridComponent`, `DigitsDisplayComponent`
+- **Real-time streaming**: Server-Sent Events via `EventSource` on the client, `Send.EventStreamAsync()` on the server, with a singleton event service for pub/sub
+- **Entities are sealed classes** for performance. `BoardGamesDbContext` disables auto-transactions
 
-```
-/
-├── .github/
-│   └── workflows/
-│       └── pr-verify.yaml          # CI/CD workflow for PR verification
-├── WebBoardGames.API/              # Presentation layer (API & Angular host)
-│   ├── angular-ui/                 # Angular frontend application
-│   ├── Program.cs                  # API entry point
-│   └── Authentication/             # API key authentication
-├── WebBoardGames.Application/      # Application layer (business logic)
-│   ├── Features/                   # Feature-based organization
-│   └── Services/                   # Application services
-├── WebBoardGames.Domain/           # Domain layer (entities, interfaces)
-│   ├── Constants/
-│   ├── Options/
-│   └── Services/
-├── WebBoardGames.Monopoly/         # Monopoly game-specific logic
-├── WebBoardGames.Persistence/      # Data access layer (MongoDB)
-├── tests/
-│   ├── WebBoardGames.API.Tests/    # Integration tests
-│   └── WebBoardGames.Application.Tests/
-├── docker-compose.yml              # Docker orchestration
-└── web-board-games.slnx            # Solution file (XML format)
-```
+### Adding a new game
 
-## Build and Test Instructions
+1. Create a new .NET project `WebBoardGames.<GameName>/` or add features under an existing layer
+2. Register services in a `ServiceCollectionExtensions` using `extension(IServiceCollection)` syntax and wire into `Program.cs`
+3. Add FastEndpoints with group hierarchy: `<GameName>Group : SubGroup<ParentGroup>`
+4. Frontend: Lazy-loaded route in `app.routes.ts`, standalone components, signals for state
+5. If the game needs a canvas: use `GameEngineCanvasComponent` and implement `GameEntity` subclasses
+
+## Build and Test
+
+**All backend commands run from repo root. All Angular commands run from `WebBoardGames.API/angular-ui/`.**
 
 ### Backend (.NET)
 
-**ALWAYS run commands in the repository root unless otherwise specified.**
-
-#### Prerequisites
-- .NET 10.0.102 SDK installed
-- Docker running (for integration tests)
-
-#### Restore Dependencies
 ```bash
 dotnet restore web-board-games.slnx
-```
-**Time**: ~5-10 seconds  
-**Note**: Always run this first after cloning or when project files change.
-
-#### Build Backend
-```bash
 dotnet build web-board-games.slnx --configuration Release
-```
-**Time**: ~15-20 seconds  
-**Note**: Use `--no-restore` flag if dependencies were just restored to save time.
-
-#### Run Backend Tests
-```bash
 dotnet test web-board-games.slnx --configuration Release --no-build
 ```
-**Time**: ~10-30 seconds  
-**Dependencies**: Requires Docker to be running for Testcontainers to spin up MongoDB.  
-**Note**: Integration tests use Testcontainers for MongoDB. If tests fail with container issues, ensure Docker is running and accessible.
 
-#### Run Backend Tests with Coverage
-```bash
-dotnet test web-board-games.slnx --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory ./TestResults
-```
+Integration tests require **Docker running** (Testcontainers spins up MongoDB). If container issues arise, check Docker is accessible or set `TESTCONTAINERS_RYUK_DISABLED=true`.
 
 ### Frontend (Angular)
 
-**ALWAYS run Angular commands from the `WebBoardGames.API/angular-ui` directory.**
-
-#### Prerequisites
-- Node.js 20.x or higher
-- npm (comes with Node.js)
-
-#### Install Dependencies
 ```bash
 cd WebBoardGames.API/angular-ui
 npm ci
-```
-**Time**: ~10-15 seconds  
-**Note**: Use `npm ci` (not `npm install`) for clean, reproducible installs from package-lock.json. Always run this before building or testing.
-
-#### Build Angular Frontend
-```bash
-cd WebBoardGames.API/angular-ui
 npm run build
+npm run test:ci          # Headless Chrome, single run, with coverage
 ```
-**Time**: ~20-30 seconds  
-**Note**: This runs `npm run set-version` first (injects version from package.json), then builds for production.
 
-#### Run Angular Tests (Interactive)
-```bash
-cd WebBoardGames.API/angular-ui
-npm test
-```
-**Note**: Opens Karma in watch mode with Chrome. For CI/automated testing, use `test:ci` instead.
+Use `npm ci` (not `npm install`). Use `npm run test:ci` for validation, `npm test` for interactive watch mode.
 
-#### Run Angular Tests (CI Mode)
-```bash
-cd WebBoardGames.API/angular-ui
-npm run test:ci
-```
-**Time**: ~10-15 seconds  
-**Note**: Runs tests once in headless Chrome with code coverage. Use this for validation in CI or after making changes.
+### CI pipeline
 
-#### Start Angular Development Server
-```bash
-cd WebBoardGames.API/angular-ui
-npm start
-```
-**Note**: Serves on `http://0.0.0.0:4200/` with hot reload enabled.
+See `.github/workflows/pr-verify.yaml`. Detects changed files and only runs affected jobs (backend-verify / angular-verify). Self-hosted Linux runners.
 
-## CI/CD Workflow
+## Code Style
 
-The repository uses GitHub Actions/Gitea Actions with a PR verification workflow (`.github/workflows/pr-verify.yaml`).
+- **Angular**: Prettier — 100-char line width, single quotes. See `.editorconfig`
+- **C#**: Follow standard .NET conventions. No explicit formatter configured
+- **Testing (backend)**: xUnit + Alba + Testcontainers + Shouldly + Bogus. Feature-based test folders mirroring source. Shared `WebApplicationFixture` with `AlbaHost`
+- **Testing (Angular)**: Karma + Jasmine. Use `provideHttpClient()` + `provideHttpClientTesting()`. Call `httpMock.verify()` in `afterEach()`. Match `provideZonelessChangeDetection()` in `TestBed` config
 
-### Workflow Triggers
-- Pull requests to `main` branch
-- Ignores changes to: `docs/**`, `.github/**`, `*.md`, `.gitignore`, `.gitattributes`
+## Pitfalls
 
-### Workflow Jobs
-
-1. **file-changes-check**: Detects which parts of the codebase changed
-   - `angular`: Changes in `WebBoardGames.API/angular-ui/**`
-   - `backend`: Changes in `WebBoardGames*/**` (excluding Angular)
-
-2. **backend-verify** (runs if backend files changed):
-   - Setup .NET 10.0.102
-   - Cache NuGet packages
-   - `dotnet restore web-board-games.slnx`
-   - `dotnet build web-board-games.slnx --configuration Release`
-   - `dotnet test web-board-games.slnx --configuration Release --no-build --collect:"XPlat Code Coverage"`
-
-3. **angular-verify** (runs if Angular files changed):
-   - Setup Node.js 20
-   - Cache npm packages
-   - `npm ci` (in `WebBoardGames.API/angular-ui`)
-   - `npm run build`
-   - `npm run test:ci`
-   - Upload coverage reports as artifacts
-
-**Important**: The workflow runs on self-hosted runners with Linux.
-
-## Common Development Patterns
-
-### Code Organization
-- **Backend**: Uses feature-based organization in the Application layer
-- **Frontend**: Angular standalone components (no NgModules)
-- **Testing**: 
-  - Backend: Integration tests using Alba and Testcontainers
-  - Frontend: Unit tests with Jasmine/Karma
-
-### Authentication
-- API uses custom API key authentication (see `WebBoardGames.API/Authentication/ApiKeyAuthenticationHandler.cs`)
-- Rate limiting configured for game creation and joining endpoints
-
-### Database
-- MongoDB is the primary database
-- Connection configured via `appsettings.json` or environment variables
-- Integration tests use Testcontainers to spin up ephemeral MongoDB instances
-
-### Docker
-- `docker-compose.yml` defines services for MongoDB and the API
-- MongoDB health check configured with 30-second start period
-- API depends on MongoDB being healthy before starting
-
-## Key Configuration Files
-
-- `web-board-games.slnx`: Solution file (XML format, .NET 9+)
-- `WebBoardGames.API/appsettings.json`: API configuration
-- `WebBoardGames.API/angular-ui/angular.json`: Angular project configuration
-- `WebBoardGames.API/angular-ui/package.json`: npm dependencies and scripts
-- `WebBoardGames.API/angular-ui/karma.conf.js`: Test runner configuration
-- `docker-compose.yml` and `docker-compose.override.yml`: Docker orchestration
-
-## Testing Guidelines
-
-### Backend Tests
-- Integration tests in `tests/WebBoardGames.API.Tests/`
-- Use Alba for HTTP endpoint testing
-- Use Testcontainers for MongoDB (requires Docker)
-- Test organization by features: `Features/Banker/`
-
-### Frontend Tests
-- Unit tests co-located with components: `*.spec.ts`
-- Use Angular Testing Library utilities
-- Test with `provideHttpClient()` and `provideHttpClientTesting()` for HTTP services
-- Always call `httpMock.verify()` in `afterEach()` for HTTP tests
-
-## Important Notes
-
-1. **Always restore dependencies first**: Run `dotnet restore` for backend and `npm ci` for frontend before building.
-
-2. **Docker requirement**: Integration tests require Docker to be running. If Testcontainers fails, check:
-   - Docker is running and accessible
-   - Docker socket permissions are correct
-   - Consider setting `TESTCONTAINERS_RYUK_DISABLED=true` if ryuk container causes issues
-
-3. **Build order matters**: For backend, restore → build → test. For frontend, install → build → test.
-
-4. **Angular SSR**: The frontend has server-side rendering enabled. Build output includes both browser and server bundles.
-
-5. **CI environment**: The workflow uses self-hosted Linux runners, so commands should be Linux-compatible.
-
-6. **Time expectations**: 
-   - Backend build: ~15-20 seconds
-   - Backend tests: ~10-30 seconds
-   - Angular install: ~10-15 seconds
-   - Angular build: ~20-30 seconds
-   - Angular tests: ~10-15 seconds
-
-7. **Code style**: 
-   - Angular uses Prettier with 100-char line width, single quotes
-   - Angular uses `.editorconfig` for editor settings
-   - No explicit C# formatting config, follow .NET conventions
-
-8. **When making changes**:
-   - Test locally with the same commands CI uses
-   - For backend: `dotnet test --configuration Release`
-   - For Angular: `npm run test:ci`
-   - Always verify integration tests pass if you modify API endpoints or database logic
+- SSR is enabled — guard browser-only APIs (e.g. `EventSource`, `document`) with `isPlatformBrowser()` checks
+- `GameEngineCanvasComponent` has a static guard against double-init from navigation; don't remove it
+- MongoDB collections use `ExternalID` (string) for public-facing IDs, `ObjectId` for internal — always use `ExternalID` in endpoints
+- Rate limiting policies (`GameCreatePolicy`, `GameJoinPolicy`) are defined in `Program.cs` — apply via `Options(x => x.RequireRateLimiting("..."))` on endpoints
+- Auth uses custom API key bearer scheme — monitoring endpoints require `monitoring:ro` claim

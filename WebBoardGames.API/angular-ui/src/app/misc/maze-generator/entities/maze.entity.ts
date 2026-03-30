@@ -1,8 +1,9 @@
 import * as PIXI from 'pixi.js';
+import { Subject, debounceTime } from 'rxjs';
 import { GameEntity } from 'app/engine';
+import { EventEmitter } from '@angular/core';
 
-const GRID_SIZE = 12;
-const UI_SCALE = 80 / GRID_SIZE;
+const UI_SCALE = 3;
 const TILE_SIZE = 20 * UI_SCALE;
 
 const SIDE_N = 1 << 0;
@@ -48,39 +49,71 @@ export class MazeEntity extends GameEntity {
   private _actualMaze: PIXI.Container | null = null;
   private _isDone = false;
 
+  private _gridWidth = 30;
+  private _gridHeight = 20;
+
+  private readonly _regenerate$ = new Subject<void>();
+
+  public mazeGenerated = new EventEmitter();
+
   constructor() {
     super();
 
-    for (let y = 0; y < GRID_SIZE; ++y) {
-      for (let x = 0; x < GRID_SIZE; ++x) {
+    for (let y = 0; y < this._gridHeight; ++y) {
+      for (let x = 0; x < this._gridWidth; ++x) {
         this._nodes.push(new Node(x, y));
       }
     }
 
-    window.addEventListener('keydown', (event) => {
-      if (event.key === ' ') {
-        if (this._isDone) {
-          this.regenerate();
-        } else {
-          this._calculateNextBranch();
-        }
-      } else if (event.key === 'ArrowUp') {
-        let idx = this._tree.indexOf(this._currentBranch!);
-        if (idx < this._tree.length - 1) {
-          ++idx;
-          this._currentBranch = this._tree[idx];
-        }
-      } else if (event.key === 'ArrowDown') {
-        let idx = this._tree.indexOf(this._currentBranch!);
-        if (idx > 0) {
-          --idx;
-          this._currentBranch = this._tree[idx];
-        }
-      }
-    });
+    this._regenerate$.pipe(debounceTime(300)).subscribe(() => this._doRegenerate());
+
+    window.addEventListener('keydown', this._onKeyDown);
+  }
+
+  public set width(value: number) {
+    this._gridWidth = value;
+    this.regenerate();
+  }
+  public set height(value: number) {
+    this._gridHeight = value;
+    this.regenerate();
   }
 
   public regenerate() {
+    this._regenerate$.next();
+  }
+
+
+  override onInitializeOverride(): void {
+    this._doRegenerate();
+    this._refreshDebugView();
+  }
+
+  override onUpdateOverride(delta: PIXI.Ticker): void {
+    this._centerContainer();
+  }
+
+  private _centerContainer() {
+    const padding = 400;
+    const screenWidth = this.app!.screen.width;
+    const screenHeight = this.app!.screen.height;
+    const mazeWidth = (this._gridWidth - 1) * TILE_SIZE;
+    const mazeHeight = (this._gridHeight - 1) * TILE_SIZE;
+
+    const scale = Math.min(1, screenWidth / (mazeWidth + padding * 2), screenHeight / (mazeHeight + padding * 2));
+    this.engine?.setZoom(scale);
+
+    this.container.x = -(mazeWidth / 2);
+    this.container.y = -(mazeHeight / 2);
+  }
+
+  override onDestroyOverride(): void {
+    this._regenerate$.complete();
+    this._regenerate$.unsubscribe();
+    window.removeEventListener('keydown', this._onKeyDown);
+  }
+
+  private _doRegenerate() {
     this._isDone = false;
     if (this._debugView) {
       this.container.removeChild(this._debugView);
@@ -89,8 +122,15 @@ export class MazeEntity extends GameEntity {
       this.container.removeChild(this._actualMaze);
     }
     this._tree.splice(0, this._tree.length);
+    this._nodes.splice(0, this._nodes.length);
 
-    const root = new Branch(this._getNode(0, Math.floor(Math.random() * GRID_SIZE)));
+    for (let y = 0; y < this._gridHeight; ++y) {
+      for (let x = 0; x < this._gridWidth; ++x) {
+        this._nodes.push(new Node(x, y));
+      }
+    }
+
+    const root = new Branch(this._getNode(0, Math.floor(Math.random() * this._gridHeight)));
     root.choices = this._getValidChoices(root);
     this._tree.push(root);
     this._currentBranch = root;
@@ -105,21 +145,13 @@ export class MazeEntity extends GameEntity {
     }
   }
 
-  override onInitializeOverride(): void {
-    this.regenerate();
-    this._refreshDebugView();
-  }
-
-  override onUpdateOverride(delta: PIXI.Ticker): void {}
-
   private _calculateNextBranch() {
     const deepest = this._findDeepestBranchWithChoicesLeft();
     if (!deepest) {
-      console.log('Maze is finished!');
-      //this.container.removeChild(this._debugView);
       this._debugView!.alpha = 0;
       this._isDone = true;
       this._buildActualMazeGraphics();
+      this.mazeGenerated.emit();
       return;
     }
     const last = this._tree[this._tree.length - 1];
@@ -136,7 +168,6 @@ export class MazeEntity extends GameEntity {
     }
 
     this._refreshChoices();
-    this._refreshDebugView();
   }
 
   private _findDeepestBranchWithChoicesLeft() {
@@ -170,10 +201,10 @@ export class MazeEntity extends GameEntity {
     if (n.y > 0) {
       result.push(this._getNode(n.x, n.y - 1));
     }
-    if (n.x < GRID_SIZE - 1) {
+    if (n.x < this._gridWidth - 1) {
       result.push(this._getNode(n.x + 1, n.y));
     }
-    if (n.y < GRID_SIZE - 1) {
+    if (n.y < this._gridHeight - 1) {
       result.push(this._getNode(n.x, n.y + 1));
     }
     // filter out nodes that are already in tree
@@ -183,7 +214,7 @@ export class MazeEntity extends GameEntity {
   }
 
   private _getNode(x: number, y: number) {
-    return this._nodes[x + y * GRID_SIZE];
+    return this._nodes[x + y * this._gridWidth];
   }
 
   private _buildActualMazeGraphics() {
@@ -224,13 +255,15 @@ export class MazeEntity extends GameEntity {
     }
   }
 
-  private _findFarthestNodeFromRoot() { 
+  private _findFarthestNodeFromRoot() {
     let maxSteps = 0;
     let maxNode = null;
     for (const b of this._tree) {
-        if (b.distFromRoot < maxSteps){continue;}
-        maxSteps = b.distFromRoot;
-        maxNode = b.node;
+      if (b.distFromRoot < maxSteps) {
+        continue;
+      }
+      maxSteps = b.distFromRoot;
+      maxNode = b.node;
     }
     return maxNode;
   }
@@ -328,4 +361,26 @@ export class MazeEntity extends GameEntity {
     shape.stroke({ width: 2 * UI_SCALE, color: 0x0 });
     this._actualMaze!.addChild(shape);
   }
+
+  private _onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === ' ') {
+      if (this._isDone) {
+        this.regenerate();
+      } else {
+        this._calculateNextBranch();
+      }
+    } else if (event.key === 'ArrowUp') {
+      let idx = this._tree.indexOf(this._currentBranch!);
+      if (idx < this._tree.length - 1) {
+        ++idx;
+        this._currentBranch = this._tree[idx];
+      }
+    } else if (event.key === 'ArrowDown') {
+      let idx = this._tree.indexOf(this._currentBranch!);
+      if (idx > 0) {
+        --idx;
+        this._currentBranch = this._tree[idx];
+      }
+    }
+  };
 }

@@ -8,30 +8,30 @@ export class GameEngine {
   private _app: PIXI.Application | null = null;
   private _entitiesAdded: GameEntity[] = [];
 
+  private _isDefaultMovementEnabled = false;
   private _isPanInitiated = false;
   private _isPanning = false;
   private _lastPanPosition: { x: number; y: number } | null = null;
 
-  constructor(clearColor: PIXI.ColorSource) {
+  private _width = 0;
+  private _height = 0;
+
+  constructor(clearColor: PIXI.ColorSource, width = 0, height = 0) {
+    this._width = width;
+    this._height = height;
     (async () => {
       this._app = new PIXI.Application();
+
+      const resizeTo = this._width > 0 || this._height > 0 ? undefined : document.body;
       await this._app.init({
+        resizeTo: resizeTo,
+        width: this._width > 0 ? this._width : undefined,
+        height: this._height > 0 ? this._height : undefined,
         backgroundColor: clearColor,
-        resizeTo: document.body,
         antialias: true,
         resolution: window.devicePixelRatio || 1,
+        multiView: true,
       });
-
-      const savedZoom = sessionStorage.getItem('game-engine.zoom');
-      if (savedZoom) {
-        this._rootContainer.scale = new PIXI.Point(parseFloat(savedZoom), parseFloat(savedZoom));
-      }
-      const savedPivotX = sessionStorage.getItem('game-engine.pivot.x');
-      const savedPivotY = sessionStorage.getItem('game-engine.pivot.y');
-      if (savedPivotX && savedPivotY) {
-        this._rootContainer.pivot.x = parseFloat(savedPivotX);
-        this._rootContainer.pivot.y = parseFloat(savedPivotY);
-      }
 
       document.body.appendChild(this._app.canvas);
 
@@ -43,6 +43,9 @@ export class GameEngine {
       this._app.canvas.addEventListener(
         'wheel',
         (event) => {
+          if (!this._isDefaultMovementEnabled) {
+            return;
+          }
           event.preventDefault();
           if (this._rootContainer!.scale.x >= 1 && event.deltaY < 0) {
             return;
@@ -58,6 +61,9 @@ export class GameEngine {
       );
 
       this._app.canvas.addEventListener('mousedown', (e) => {
+        if (!this._isDefaultMovementEnabled) {
+          return;
+        }
         if (e.button === 0) {
           this._isPanInitiated = true;
           this._isPanning = false;
@@ -65,6 +71,9 @@ export class GameEngine {
         }
       });
       this._app.canvas.addEventListener('touchstart', (e) => {
+        if (!this._isDefaultMovementEnabled) {
+          return;
+        }
         if (e.touches.length === 1) {
           this._isPanInitiated = true;
           this._isPanning = false;
@@ -75,6 +84,9 @@ export class GameEngine {
       this._app.canvas.addEventListener(
         'touchmove',
         (e) => {
+          if (!this._isDefaultMovementEnabled) {
+            return;
+          }
           if (this._isPanInitiated && e.touches.length === 1) {
             const dx = e.touches[0].clientX - this._lastPanPosition!.x;
             const dy = e.touches[0].clientY - this._lastPanPosition!.y;
@@ -93,6 +105,9 @@ export class GameEngine {
         { passive: false },
       );
       window.addEventListener('mousemove', (e) => {
+        if (!this._isDefaultMovementEnabled) {
+          return;
+        }
         if (this._isPanInitiated) {
           const dx = e.clientX - this._lastPanPosition!.x;
           const dy = e.clientY - this._lastPanPosition!.y;
@@ -107,6 +122,9 @@ export class GameEngine {
       });
 
       this._app.canvas.addEventListener('touchend', () => {
+        if (!this._isDefaultMovementEnabled) {
+          return;
+        }
         if (this._isPanning) {
           sessionStorage.setItem('game-engine.pivot.x', this._rootContainer!.pivot.x.toString());
           sessionStorage.setItem('game-engine.pivot.y', this._rootContainer!.pivot.y.toString());
@@ -115,6 +133,9 @@ export class GameEngine {
         this._isPanning = false;
       });
       window.addEventListener('mouseup', () => {
+        if (!this._isDefaultMovementEnabled) {
+          return;
+        }
         if (this._isPanning) {
           sessionStorage.setItem('game-engine.pivot.x', this._rootContainer!.pivot.x.toString());
           sessionStorage.setItem('game-engine.pivot.y', this._rootContainer!.pivot.y.toString());
@@ -125,6 +146,36 @@ export class GameEngine {
     })();
   }
 
+  resize(canvasWidth: number, canvasHeight: number) {
+    this._width = canvasWidth;
+    this._height = canvasHeight;
+    if (!this._app?.renderer) {
+      return;
+    }
+    if (this._width > 0 || this._height > 0) {
+      this._app.resizeTo = null as any;
+      this._app.renderer.resize(this._width, this._height);
+    } else {
+      this._app.renderer.resize(document.body.clientWidth, document.body.clientHeight);
+      this._app.resizeTo = document.body;
+    }
+  }
+
+  enableDefaultMovement() {
+    this._isDefaultMovementEnabled = true;
+
+    const savedZoom = sessionStorage.getItem('game-engine.zoom');
+    if (savedZoom) {
+      this._rootContainer.scale = new PIXI.Point(parseFloat(savedZoom), parseFloat(savedZoom));
+    }
+    const savedPivotX = sessionStorage.getItem('game-engine.pivot.x');
+    const savedPivotY = sessionStorage.getItem('game-engine.pivot.y');
+    if (savedPivotX && savedPivotY) {
+      this._rootContainer.pivot.x = parseFloat(savedPivotX);
+      this._rootContainer.pivot.y = parseFloat(savedPivotY);
+    }
+  }
+
   getZoom(): number {
     return this._rootContainer ? this._rootContainer.scale.x : 1;
   }
@@ -133,6 +184,9 @@ export class GameEngine {
       return;
     }
     this._rootContainer.scale = new PIXI.Point(zoom, zoom);
+    if (!this._isDefaultMovementEnabled) {
+      return;
+    }
     sessionStorage.setItem('game-engine.zoom', this._rootContainer!.scale.x.toString());
   }
 

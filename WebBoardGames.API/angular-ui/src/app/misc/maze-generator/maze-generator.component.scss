@@ -1,0 +1,92 @@
+.maze-generator-container {
+  position: relative;
+  height: 100%;
+
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    'toolbar'
+    'content';
+}
+
+.toolbar {
+  grid-area: toolbar;
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  padding: 1em;
+  z-index: 9;
+  background: white;
+  box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.3);
+
+  form > * {
+    margin-right: 2em;
+  }
+}
+
+.content {
+  z-index: 8;
+  background: white;
+  grid-area: content;
+  position: relative;
+  overflow-y: scroll;
+  margin-top: 7em;
+  padding-top: 2em;
+  padding-bottom: 10em;
+}
+
+::ng-deep canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.page {
+  margin-left: auto;
+  margin-right: auto;
+  width: 210mm;
+  height: 320mm;
+  padding: 1cm 2cm;
+  display: flex;
+  flex-direction: column;
+  gap: 4em;
+
+  box-shadow: 4px 4px 18px rgba(0, 0, 0, 0.35);
+
+  &:not(:first-child) {
+    margin-top: 2em;
+  }
+
+  .page-image--half-height {
+    width: 100%;
+    height: calc(50% - 2em);
+  }
+
+  img {
+    width: 100%;
+    height: auto;
+    max-height: 100%;
+  }
+}
+
+@media print {
+  .toolbar,
+  ::ng-deep canvas {
+    display: none;
+  }
+
+  .content {
+    overflow: visible;
+    padding: 0;
+    margin: 0;
+  }
+
+  .page {
+    margin: 0;
+    box-shadow: none;
+    page-break-after: always;
+  }
+}

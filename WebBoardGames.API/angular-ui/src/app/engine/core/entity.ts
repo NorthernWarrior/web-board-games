@@ -64,6 +64,7 @@ export class GameEntity {
   removeChild(entity: GameEntity) {
     this._children.splice(this._children.indexOf(entity), 1);
     this._container.removeChild(entity.container);
+    entity._onDestroy();
     entity.container.destroy({ children: true });
   }
 
@@ -88,6 +89,14 @@ export class GameEntity {
   }
 
   onUpdateOverride(delta: PIXI.Ticker): void {}
+
+  private _onDestroy(): void{
+    for (const child of this._children) {
+      child._onDestroy();
+    }
+    this.onDestroyOverride();
+  }
+  protected onDestroyOverride(): void {}
 
   onAnimationFrame(delta: PIXI.Ticker): void {
     this.onAnimationFrameOverride(delta);

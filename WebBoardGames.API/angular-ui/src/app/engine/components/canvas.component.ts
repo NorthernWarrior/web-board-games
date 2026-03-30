@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, inject, input, output, PLATFORM_ID } from '@angular/core';
+import { AfterViewInit, Component, effect, ElementRef, inject, input, output, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { GameEngine } from '../core/engine';
 
@@ -14,6 +14,21 @@ export class GameEngineCanvasComponent implements AfterViewInit {
 
   public readonly clearColor = input<number>(0x3c3c3c);
   public readonly engineInitialized = output<GameEngine>();
+  public readonly hasDefaultMovement = input<boolean>(false);
+
+  public readonly canvasWidth = input(0);
+  public readonly canvasHeight = input(0);
+
+  constructor(){
+    effect(()=>{
+      const w = this.canvasWidth();
+      const h = this.canvasHeight();
+
+      if (this._engine) {
+        this._engine.resize(w, h);
+      }
+    });
+  }
 
   ngAfterViewInit(): void {
     // TODO: Hacky workaround, if this would not be here, the canvas would be created twice
@@ -27,7 +42,10 @@ export class GameEngineCanvasComponent implements AfterViewInit {
       return;
     }
 
-    this._engine = new GameEngine(this.clearColor());
+    this._engine = new GameEngine(this.clearColor(), this.canvasWidth(), this.canvasHeight());
+    if (this.hasDefaultMovement()) {
+      this._engine.enableDefaultMovement();
+    }
     this.engineInitialized.emit(this._engine);
   }
 }
