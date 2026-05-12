@@ -19,7 +19,7 @@
               }
             </mat-select>
           </mat-form-field>
-          <button mat-raised-button color="primary" (click)="onEnterPrintLayout()">Print Layout</button>
+          <button mat-raised-button color="primary" (click)="onPrintLayoutEnter()">Print Layout</button>
         </form>
       </div>
       <app-game-engine-canvas
@@ -31,7 +31,7 @@
     @case ('print-layout') {
       <div class="toolbar">
         <form [formGroup]="formLayout">
-          <button mat-raised-button color="primary" (click)="uimode.set('generate')">Back</button>
+          <button mat-raised-button color="primary" (click)="onPrintLayoutExit()">Back</button>
 
           <mat-form-field>
             <mat-label>Number of Mazes</mat-label>

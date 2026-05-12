@@ -72,10 +72,14 @@ export class MazeGeneratorComponent {
     engine.addEntity(this._mazeEntity);
   }
 
-  onEnterPrintLayout() {
+  onPrintLayoutEnter() {
     this.uimode.set('print-layout');
 
     this._generateMazes(this.formLayout.value.count);
+  }
+  onPrintLayoutExit() {
+    this.uimode.set('generate');
+    this.imageUrls.set([]);
   }
 
   canPrint() {
@@ -85,8 +89,7 @@ export class MazeGeneratorComponent {
     window.print();
 
     // After printing, we want to reset the state, so that the user can generate new mazes and print again.
-    this.imageUrls.set([]);
-    this.uimode.set('generate');
+    this.onPrintLayoutExit();
   }
 
   private _generateMazes(count: number) {
